@@ -6,6 +6,7 @@ import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.ujorm.petstore.Entities.Customer;
+import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
 
 /** Main Spring Boot Application and Service wrapper */
@@ -30,7 +31,7 @@ public class AppPetStore {
          * For demonstration purposes, this always returns the customer with ID 1.
          */
         public Customer getCurrentCustomer() {
-            return dao.customer.findById(1L).orElseThrow(() ->
+            return dao.getCustomer().findById(1L).orElseThrow(() ->
                     new IllegalStateException("Default customer (ID=1) is missing in the database.")
             );
         }
@@ -43,7 +44,7 @@ public class AppPetStore {
          */
         @Transactional
         public PetOrder buyPet(Long petId) {
-            var pet = dao.pet.findById(petId)
+            var pet = dao.getPet().findById(petId)
                     .orElseThrow(() -> new IllegalStateException("Pet not found: " + petId));
 
             if (!"AVAILABLE".equals(pet.status())) {
@@ -51,24 +52,24 @@ public class AppPetStore {
             }
 
             // Create new pet record with updated status (since Records are immutable)
-            var soldPet = new Entities.Pet(pet.id(), pet.name(), "SOLD", pet.category());
-            dao.pet.update(soldPet);
+            var soldPet = new Pet(pet.id(), pet.name(), "SOLD", pet.category());
+            dao.getPet().update(soldPet);
 
             // Create and save the order
             var customer = getCurrentCustomer();
-            var order = new Entities.PetOrder(null, customer, soldPet);
+            var order = new PetOrder(null, customer, soldPet);
 
-            return dao.order.insert(order);
+            return dao.getOrder().insert(order);
         }
 
         /** Exposes PetDao for read-only operations */
         public Dao.PetDao petDao() {
-            return dao.pet;
+            return dao.getPet();
         }
 
         /** Exposes CategoryDao for read-only operations */
         public Dao.CategoryDao categoryDao() {
-            return dao.category;
+            return dao.getCategory();
         }
     }
 
