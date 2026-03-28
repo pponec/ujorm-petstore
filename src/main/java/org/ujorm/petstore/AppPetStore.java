@@ -1,10 +1,13 @@
 package org.ujorm.petstore;
 
+import java.util.List;
+import java.util.Optional;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Customer;
 import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
@@ -16,6 +19,7 @@ public class AppPetStore {
 
     /** Service layer encapsulating business logic */
     @Service
+    @Transactional
     public static class Services {
 
         /** Data access component */
@@ -26,50 +30,58 @@ public class AppPetStore {
             this.dao = dao;
         }
 
-        /**
-         * Gets the currently logged-in customer.
-         * For demonstration purposes, this always returns the customer with ID 1.
-         */
-        public Customer getCurrentCustomer() {
-            return dao.getCustomer().findById(1L).orElseThrow(() ->
-                    new IllegalStateException("Default customer (ID=1) is missing in the database.")
-            );
+        /** Gets all pets for display */
+        public List<Pet> getPets() {
+            return dao.getPet().findAll();
         }
 
-        /**
-         * Processes a pet purchase in a single database transaction.
-         * @param petId The ID of the pet to buy
-         * @return The created order
-         * @throws IllegalStateException if the pet is not found or not available
-         */
-        @Transactional
+        /** Gets all categories for the form */
+        public List<Category> getCategories() {
+            return dao.getCategory().findAll();
+        }
+
+        /** Finds a specific pet */
+        public Optional<Pet> getPetById(Long id) {
+            return dao.getPet().findById(id);
+        }
+
+        /** Gets the default customer */
+        public Customer getCurrentCustomer() {
+            return dao.getCustomer().findById(1L).orElseThrow(() ->
+                    new IllegalStateException("Default customer is missing."));
+        }
+
+        /** Processes a pet purchase */
         public PetOrder buyPet(Long petId) {
             var pet = dao.getPet().findById(petId)
-                    .orElseThrow(() -> new IllegalStateException("Pet not found: " + petId));
+                    .orElseThrow(() -> new IllegalStateException("Pet not found."));
 
             if (!"AVAILABLE".equals(pet.status())) {
-                throw new IllegalStateException("Pet is not available for purchase: " + pet.name());
+                throw new IllegalStateException("Pet is not available.");
             }
 
-            // Create new pet record with updated status (since Records are immutable)
             var soldPet = new Pet(pet.id(), pet.name(), "SOLD", pet.category());
             dao.getPet().update(soldPet);
 
-            // Create and save the order
-            var customer = getCurrentCustomer();
-            var order = new PetOrder(null, customer, soldPet);
-
-            return dao.getOrder().insert(order);
+            return dao.getOrder().insert(new PetOrder(null, getCurrentCustomer(), soldPet));
         }
 
-        /** Exposes PetDao for read-only operations */
-        public Dao.PetDao petDao() {
-            return dao.getPet();
+        /** Saves or updates a pet */
+        public void savePet(Long id, String name, String status, Long categoryId) {
+            var category = getCategories().stream()
+                    .filter(c -> c.id().equals(categoryId)).findFirst().orElseThrow();
+
+            if (id != null) {
+                dao.getPet().update(new Pet(id, name, status, category));
+            } else {
+                dao.getPet().insert(new Pet(null, name, status, category));
+            }
         }
 
-        /** Exposes CategoryDao for read-only operations */
-        public Dao.CategoryDao categoryDao() {
-            return dao.getCategory();
+        /** Deletes a pet */
+        public void deletePet(Long id) {
+            var pet = dao.getPet().findById(id).orElseThrow();
+            dao.getPet().delete(pet);
         }
     }
 

@@ -48,11 +48,6 @@ public class Dao {
     /** Provides access to orders */
     public PetOrderDao getOrder() { return orderDao; }
 
-    /** Gets the current connection managed by Spring transaction */
-    private Connection getConnection() {
-        return DataSourceUtils.getConnection(dataSource);
-    }
-
     /** Data access object for categories */
     public class CategoryDao {
 
@@ -127,4 +122,25 @@ public class Dao {
         }
     }
 
+    /**
+     * Returns a standard JDBC Connection that is fully managed by the Spring Framework.
+     * <p>
+     * This method is <strong>transaction-aware</strong>. It uses {@link DataSourceUtils}
+     * to either retrieve an existing connection bound to the current thread
+     * (if a transaction is active) or creates a new one.
+     * </p>
+     * <p>
+     * <strong>Lifecycle Management:</strong> The opening and closing of the connection
+     * is automatically handled by Spring's {@code PlatformTransactionManager}.
+     * This is typically triggered by the {@code @Transactional} annotation in the service layer.
+     * Manual closing of the connection is not required and should be avoided to prevent
+     * breaking the transaction synchronization.
+     * </p>
+     *
+     * @return a transaction-aware JDBC Connection
+     * @see org.springframework.jdbc.datasource.DataSourceUtils#getConnection(DataSource)
+     */
+    private Connection getConnection() {
+        return DataSourceUtils.getConnection(dataSource);
+    }
 }
