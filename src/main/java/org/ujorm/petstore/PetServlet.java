@@ -119,10 +119,11 @@ public class PetServlet extends HttpServlet {
                                     // Buy action
                                     try (var form = tdActions.addForm("d-inline", "me-1").setMethod("POST").setAction("?action=buy")) {
                                         form.addHiddenInput("id", pet.id());
-                                        var btn = form.addSubmitButton("btn", "btn-sm", "btn-success").addText("Buy");
+                                        var btn = form.addSubmitButton("btn", "btn-sm", "btn-success");
                                         if (!"AVAILABLE".equals(pet.status())) {
                                             btn.setAttr("disabled", "disabled");
                                         }
+                                        btn.addText("Buy");
                                     }
                                     // Edit action
                                     try (var form = tdActions.addForm("d-inline", "me-1").setMethod("GET").setAction("")) {
