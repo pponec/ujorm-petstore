@@ -102,16 +102,23 @@ public class PetServlet extends HttpServlet {
                                 row.addTableDetail().addText(pet.category() != null ? pet.category().name() : "");
 
                                 try (var tdActions = row.addTableDetail()) {
+                                    // Buy form
                                     try (var form = tdActions.addForm("d-inline").setMethod("POST").setAction("?action=buy")) {
                                         form.addHiddenInput("id", pet.id());
                                         var btn = form.addSubmitButton("btn", "btn-sm", "btn-success");
                                         if (!"AVAILABLE".equals(pet.status())) btn.setAttr("disabled", "disabled");
                                         btn.addText("Buy");
                                     }
+                                    // Edit form
                                     try (var form = tdActions.addForm("d-inline", "ms-1").setMethod("GET").setAction("")) {
                                         form.addHiddenInput("action", "edit");
                                         form.addHiddenInput("id", pet.id());
                                         form.addSubmitButton("btn", "btn-sm", "btn-outline-primary").addText("Edit");
+                                    }
+                                    // Delete form
+                                    try (var form = tdActions.addForm("d-inline", "ms-1").setMethod("POST").setAction("?action=delete")) {
+                                        form.addHiddenInput("id", pet.id());
+                                        form.addSubmitButton("btn", "btn-sm", "btn-outline-danger").addText("Delete");
                                     }
                                 }
                             }
@@ -135,8 +142,11 @@ public class PetServlet extends HttpServlet {
                         try (var col = row.addDiv("col-md-3")) {
                             var select = col.addSelect("form-select").setName("categoryId");
                             for (var cat : categories) {
-                                var opt = select.addElement("option").setAttr("value", cat.id()).addText(cat.name());
-                                if (petToEdit != null && cat.id().equals(petToEdit.category().id())) opt.setAttr("selected", "selected");
+                                var opt = select.addElement("option").setAttr("value", cat.id());
+                                if (petToEdit != null && petToEdit.category() != null && cat.id().equals(petToEdit.category().id())) {
+                                    opt.setAttr("selected", "selected");
+                                }
+                                opt.addText(cat.name());
                             }
                         }
                         row.addDiv("col-md-2").addSubmitButton("btn", "btn-primary", "w-100").addText("Save");
