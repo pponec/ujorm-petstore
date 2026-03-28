@@ -11,6 +11,7 @@ import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Customer;
 import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
+import org.ujorm.tools.Check;
 
 /** Main Spring Boot Application and Service wrapper */
 @SpringBootApplication
@@ -73,13 +74,14 @@ public class AppPetStore {
 
         /** Saves or updates a pet */
         public void savePet(Long id, String name, String status, Long categoryId) {
+            var extName = Check.isEmpty(name) ? "?" : name;
             var category = getCategories().stream()
                     .filter(c -> c.id().equals(categoryId)).findFirst().orElseThrow();
 
             if (id != null) {
-                dao.getPet().update(new Pet(id, name, status, category));
+                dao.getPet().update(new Pet(id, extName, status, category));
             } else {
-                dao.getPet().insert(new Pet(null, name, status, category));
+                dao.getPet().insert(new Pet(null, extName, status, category));
             }
         }
 
