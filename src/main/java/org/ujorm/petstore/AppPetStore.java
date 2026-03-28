@@ -51,8 +51,13 @@ public class AppPetStore {
                     new IllegalStateException("Default customer is missing."));
         }
 
-        /** Processes a pet purchase */
+        /** Processes a pet purchase
+         * @param petId Optional pet identeifier do nothing.
+         */
         public PetOrder buyPet(Long petId) {
+            if (petId == null) {
+                return null;
+            }
             var pet = dao.getPet().findById(petId)
                     .orElseThrow(() -> new IllegalStateException("Pet not found."));
 
@@ -78,10 +83,15 @@ public class AppPetStore {
             }
         }
 
-        /** Deletes a pet */
+        /**
+         * Deletes a pet
+         * @param id Optional pet identifier do nothong.
+         */
         public void deletePet(Long id) {
-            var pet = dao.getPet().findById(id).orElseThrow();
-            dao.getPet().delete(pet);
+            if (id != null) {
+                var pet = dao.getPet().findById(id).orElseThrow();
+                dao.getPet().delete(pet);
+            }
         }
     }
 
