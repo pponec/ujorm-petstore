@@ -22,26 +22,31 @@ public class Dao {
     private static final EntityManager<Pet, Long> PET_EM = EntityManager.of(Pet.class);
     private static final EntityManager<PetOrder, Long> ORDER_EM = EntityManager.of(PetOrder.class);
 
-
     /** Current data source managed by Spring */
     private final DataSource dataSource;
 
-    /** Provides access to categories */
-    public final CategoryDao category = new CategoryDao();
-
-    /** Provides access to customers */
-    public final CustomerDao customer = new CustomerDao();
-
-    /** Provides access to pets */
-    public final PetDao pet = new PetDao();
-
-    /** Provides access to orders */
-    public final PetOrderDao order = new PetOrderDao();
+    /** Internal DAO instances */
+    private final CategoryDao categoryDao = new CategoryDao();
+    private final CustomerDao customerDao = new CustomerDao();
+    private final PetDao petDao = new PetDao();
+    private final PetOrderDao orderDao = new PetOrderDao();
 
     /** Creates a new Dao with the given data source */
     public Dao(DataSource dataSource) {
         this.dataSource = dataSource;
     }
+
+    /** Provides access to categories */
+    public CategoryDao getCategory() { return categoryDao; }
+
+    /** Provides access to customers */
+    public CustomerDao getCustomer() { return customerDao; }
+
+    /** Provides access to pets */
+    public PetDao getPet() { return petDao; }
+
+    /** Provides access to orders */
+    public PetOrderDao getOrder() { return orderDao; }
 
     /** Gets the current connection managed by Spring transaction */
     private Connection getConnection() {
@@ -53,7 +58,7 @@ public class Dao {
 
         /** Finds all categories */
         public List<Category> findAll() {
-            return CUSTOMER_EM.crud(getConnection())
+            return CATEGORY_EM.crud(getConnection())
                     .selectWhere("", builder -> builder
                     .streamMap(CATEGORY_EM.mapper())
                     .toList());
@@ -121,7 +126,5 @@ public class Dao {
             return ORDER_EM.crud(getConnection()).insert(order);
         }
     }
-
-
 
 }
