@@ -143,10 +143,11 @@ public class PetServlet extends HttpServlet {
                             for (var status : Status.values()) {
                                 statuses.put(status.name(), status.getDisplayName());
                             }
-                            col.addSelect(Css.formSelect).setName(STATUS.toString()).addSelectOptions(petToEdit != null ? petToEdit.status() : Status.AVAILABLE.name(), statuses);
+                            var selectValue = petToEdit != null ? petToEdit.status() : Status.AVAILABLE.name();
+                            col.addSelect(Css.formSelect).setName(STATUS).addSelectOptions(selectValue, statuses);
                         }
                         try (var col = row.addDiv(Css.colMd3)) {
-                            var select = col.addSelect(Css.formSelect).setName(CATEGORY_ID.toString());
+                            var select = col.addSelect(Css.formSelect).setName(CATEGORY_ID);
                             for (var cat : categories) {
                                 var opt = select.addElement("option").setAttr("value", cat.id());
                                 if (petToEdit != null && petToEdit.category() != null && cat.id().equals(petToEdit.category().id())) {
