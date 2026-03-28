@@ -1,5 +1,6 @@
 package org.ujorm.petstore;
 
+import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
@@ -8,21 +9,34 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.LinkedHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 import org.ujorm.tools.web.Element;
 
+import org.ujorm.petstore.Entities.Category;
+import org.ujorm.petstore.Entities.Customer;
+import org.ujorm.petstore.Entities.Pet;
+import org.ujorm.petstore.Entities.PetOrder;
+
 /** Web presentation layer for PetStore */
-@WebServlet(urlPatterns = "/")
+@WebServlet(urlPatterns = {"", "/index"})
 public class PetServlet extends HttpServlet {
 
     /** Injected business logic and data access */
     @Autowired
     private AppPetStore.Services services;
 
+    /** Initializes the servlet and enables Spring dependency injection */
+    @Override
+    public void init() throws ServletException {
+        super.init();
+        SpringBeanAutowiringSupport.processInjectionBasedOnServletContext(this, getServletContext());
+    }
+
     /** Handles GET requests to display the UI */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         var action = req.getParameter("action");
-        Entities.Pet petToEdit = null;
+        Pet petToEdit = null;
 
         if ("edit".equals(action)) {
             var id = Long.valueOf(req.getParameter("id"));
@@ -54,10 +68,10 @@ public class PetServlet extends HttpServlet {
                     .filter(c -> c.id().equals(categoryId)).findFirst().orElseThrow();
 
             if (idParam != null && !idParam.isEmpty()) {
-                var pet = new Entities.Pet(Long.valueOf(idParam), name, status, category);
+                var pet = new Pet(Long.valueOf(idParam), name, status, category);
                 services.petDao().update(pet);
             } else {
-                var pet = new Entities.Pet(null, name, status, category);
+                var pet = new Pet(null, name, status, category);
                 services.petDao().insert(pet);
             }
         }
@@ -66,7 +80,7 @@ public class PetServlet extends HttpServlet {
     }
 
     /** Renders the main HTML page */
-    private void renderPage(HttpServletResponse resp, Entities.Pet petToEdit) throws IOException {
+    private void renderPage(HttpServletResponse resp, Pet petToEdit) throws IOException {
         resp.setContentType("text/html;charset=UTF-8");
         var bootstrapCss = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
 
