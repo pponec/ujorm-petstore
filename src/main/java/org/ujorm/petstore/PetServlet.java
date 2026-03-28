@@ -11,11 +11,7 @@ import java.util.LinkedHashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 import org.ujorm.tools.web.Element;
-
-import org.ujorm.petstore.Entities.Category;
-import org.ujorm.petstore.Entities.Customer;
-import org.ujorm.petstore.Entities.Pet;
-import org.ujorm.petstore.Entities.PetOrder;
+import org.ujorm.petstore.Entities.*;
 
 /** Web presentation layer for PetStore */
 @WebServlet(urlPatterns = {"", "/index"})
