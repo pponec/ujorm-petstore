@@ -2,6 +2,7 @@ package org.ujorm.petstore;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.boot.web.servlet.ServletComponentScan;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.ujorm.petstore.Entities.Customer;
@@ -9,6 +10,7 @@ import org.ujorm.petstore.Entities.PetOrder;
 
 /** Main Spring Boot Application and Service wrapper */
 @SpringBootApplication
+@ServletComponentScan
 public class AppPetStore {
 
     /** Service layer encapsulating business logic */
