@@ -1,69 +1,73 @@
 package org.ujorm.petstore;
 
+import jakarta.persistence.Column;
+import jakarta.persistence.Id;
+import jakarta.persistence.Table;
+
 /** Wrapper class for all domain entities */
 public class Entities {
 
     /** Category of the pet */
-    @Table("category")
+    @Table(name = "category")
     public record Category(
             /** Gets the primary key */
             @Id
-            @Column("id")
+            @Column(name = "id")
             Long id,
 
             /** Gets the category name */
-            @Column("name")
+            @Column(name = "name")
             String name
     ) {}
 
     /** Customer entity */
-    @Table("customer")
+    @Table(name = "customer")
     public record Customer(
             /** Gets the primary key */
             @Id
-            @Column("id")
+            @Column(name = "id")
             Long id,
 
             /** Gets the customer name */
-            @Column("name")
+            @Column(name = "name")
             String name
     ) {}
 
     /** Pet entity */
-    @Table("pet")
+    @Table(name = "pet")
     public record Pet(
             /** Gets the primary key */
             @Id
-            @Column("id")
+            @Column(name = "id")
             Long id,
 
             /** Gets the pet name */
-            @Column("name")
+            @Column(name = "name")
             String name,
 
             /** Gets the pet status */
-            @Column("status")
+            @Column(name = "status")
             String status,
 
             /** Gets the category */
-            @Column("category_id")
+            @Column(name = "category_id")
             Category category
     ) {}
 
     /** Order for a pet */
-    @Table("pet_order")
+    @Table(name = "pet_order")
     public record PetOrder(
             /** Gets the primary key */
             @Id
-            @Column("id")
+            @Column(name = "id")
             Long id,
 
             /** Gets the customer */
-            @Column("customer_id")
+            @Column(name = "customer_id")
             Customer customer,
 
             /** Gets the ordered pet */
-            @Column("pet_id")
+            @Column(name = "pet_id")
             Pet pet
     ) {}
 
