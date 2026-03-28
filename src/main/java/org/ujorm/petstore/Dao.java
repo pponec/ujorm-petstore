@@ -17,9 +17,9 @@ import org.ujorm.petstore.Entities.PetOrder;
 @Repository
 public class Dao {
 
+    private static final EntityManager<Pet, Long> PET_EM = EntityManager.of(Pet.class);
     private static final EntityManager<Category, Long> CATEGORY_EM = EntityManager.of(Category.class);
     private static final EntityManager<Customer, Long> CUSTOMER_EM = EntityManager.of(Customer.class);
-    private static final EntityManager<Pet, Long> PET_EM = EntityManager.of(Pet.class);
     private static final EntityManager<PetOrder, Long> ORDER_EM = EntityManager.of(PetOrder.class);
 
     /** Current data source managed by Spring */
