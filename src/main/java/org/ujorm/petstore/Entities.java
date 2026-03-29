@@ -1,8 +1,7 @@
 package org.ujorm.petstore;
 
-import jakarta.persistence.Column;
-import jakarta.persistence.Id;
-import jakarta.persistence.Table;
+import jakarta.persistence.*;
+import org.ujorm.petstore.Constants.Status;
 
 /** Wrapper class for all domain entities */
 public class Entities {
@@ -47,7 +46,7 @@ public class Entities {
 
             /** Gets the pet status */
             @Column(name = "status")
-            String status,
+            Status status,
 
             /** Gets the category */
             @Column(name = "category_id")

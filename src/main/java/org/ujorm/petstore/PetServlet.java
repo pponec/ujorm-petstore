@@ -6,7 +6,7 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
-import java.util.LinkedHashMap;
+import java.util.EnumMap;
 import java.util.List;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
@@ -17,6 +17,8 @@ import org.ujorm.tools.web.Html;
 import org.ujorm.tools.web.HtmlElement;
 import org.ujorm.tools.web.ao.HttpParameter;
 import org.ujorm.tools.web.request.HttpContext;
+import org.ujorm.petstore.Constants.Css;
+import org.ujorm.petstore.Constants.Status;
 
 import static org.ujorm.petstore.PetServlet.Attrib.*;
 
@@ -42,42 +44,49 @@ public class PetServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         var ctx = HttpContext.ofServlet(req, resp);
-        var actionText = ctx.getParameter(ACTION, "");
-        var petId = ctx.getParameter(ID, null, Long::parseLong);
-        var petToEdit = (Action.EDIT.equalsName(actionText) && petId != null)
+        var action = ctx.parameter(ACTION, Action::paramValueOf);
+        var petId = ctx.parameter(ID, Long::parseLong);
+        var petToEdit = (Action.EDIT.equals(action) && petId != null)
                 ? services.getPetById(petId).orElse(null)
                 : null;
         renderPage(ctx, petToEdit, services.getPets(), services.getCategories(), req.getContextPath());
     }
 
-    /** Handles POST requests to modify data */
+    /** Handles POST requests to modify data using a unified action detection */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         var ctx = HttpContext.ofServlet(req, resp);
-        var actionText = ctx.getParameter(ACTION, "");
-        var idText = ctx.getParameter(ID, "");
-        var idParam = idText.isEmpty() ? null : Long.valueOf(idText);
+        var action = Action.UNKNOWN;
+        var idParam = (Long) null;
 
-        try {
-            var action = Action.valueOf(actionText);
-            switch (action) {
-                case BUY -> services.buyPet(idParam);
-                case DELETE -> services.deletePet(idParam);
-                case SAVE -> {
-                    var catIdText = ctx.getParameter(CATEGORY_ID, "");
-                    var categoryId = catIdText.isEmpty() ? null : Long.valueOf(catIdText);
-                    services.savePet(idParam,
-                            ctx.getParameter(NAME, ""),
-                            ctx.getParameter(STATUS, ""),
-                            categoryId
-                    );
-                }
-                default -> { }
+        // 1. Try to detect action and pet ID from button names (for the table form)
+        for (var actionName : Action.values()) {
+            var val = ctx.parameter(actionName, Long::parseLong);
+            if (val != null) {
+                action = actionName;
+                idParam = val;
+                break;
             }
-        } catch (IllegalArgumentException e) {
-            // Ignore invalid action and proceed to redirect
         }
-        resp.sendRedirect(req.getContextPath() + "/");
+
+        // 2. Fallback for the "Save" form which uses explicit URL parameters
+        if (action == Action.UNKNOWN) {
+            action = Action.paramValueOf(ctx.parameter(ACTION, ""));
+            idParam = ctx.parameter(ID, Long::parseLong);
+        }
+
+        var resultUrl = req.getContextPath() + "/";
+        switch (action) {
+            case BUY -> services.buyPet(idParam);
+            case DELETE -> services.deletePet(idParam);
+            case EDIT -> resultUrl += "?" + ACTION + "=" + Action.EDIT + "&" + ID + "=" + idParam;
+            case SAVE -> services.savePet(idParam,
+                    ctx.parameter(NAME, ""),
+                    ctx.parameter(STATUS, s -> Status.valueOf(s.toUpperCase())), // POP?
+                    ctx.parameter(CATEGORY_ID, Long::parseLong));
+        }
+        // Prevents duplicate form submissions (PRG pattern)
+        resp.sendRedirect(resultUrl);
     }
 
     /** Renders the main HTML page */
@@ -116,15 +125,11 @@ public class PetServlet extends HttpServlet {
                                 row.addTableDetail().addText(pet.id());
                                 row.addTableDetail().addText(pet.name());
 
-                                var status = Status.findByName(pet.status());
-                                row.addTableDetail().addSpan(Css.badge, status.getBadgeClass()).addText(status.name());
+                                var statusCss = statusCss(pet.status());
+                                var statusName = statusName(pet.status());
+                                row.addTableDetail().addSpan(Css.badge, statusCss).addText(statusName);
                                 row.addTableDetail().addText(pet.category() != null ? pet.category().name() : "");
-
-                                try (var tdActions = row.addTableDetail()) {
-                                    buyForm(pet, tdActions);
-                                    editForm(pet, tdActions);
-                                    deleteForm(pet, tdActions);
-                                }
+                                buttonBar(pet, row.addTableDetail());
                             }
                         }
                     }
@@ -132,18 +137,18 @@ public class PetServlet extends HttpServlet {
 
                 // Form
                 body.addHeading(2, petToEdit == null ? "Add New Pet" : "Edit Pet", Css.mt5);
-                try (var form = body.addForm().setMethod(Html.V_POST).setAction("?action=" + Action.SAVE.name())) {
-                    if (petToEdit != null) form.addHiddenInput(ID.toString(), petToEdit.id());
+                try (var form = body.addForm().setMethod(Html.V_POST).setAction("?" + ACTION + "=" + Action.SAVE)) {
+                    if (petToEdit != null) form.addHiddenInput(ID, petToEdit.id());
                     try (var row = form.addDiv(Css.row, Css.g3)) {
                         try (var col = row.addDiv(Css.colMd4)) {
-                            col.addTextInput(Css.formControl).setNameValue(NAME.toString(), petToEdit != null ? petToEdit.name() : "").setAttr("placeholder", "Name");
+                            col.addTextInput(Css.formControl).setNameValue(NAME, petToEdit != null ? petToEdit.name() : "").setAttr("placeholder", "Name");
                         }
                         try (var col = row.addDiv(Css.colMd3)) {
-                            var statuses = new LinkedHashMap<String, String>();
+                            var selectValue = petToEdit != null ? petToEdit.status() : Status.AVAILABLE;
+                            var statuses = new EnumMap<Status, String>(Status.class);
                             for (var status : Status.values()) {
-                                statuses.put(status.name(), status.getDisplayName());
+                                statuses.put(status, statusName(status));
                             }
-                            var selectValue = petToEdit != null ? petToEdit.status() : Status.AVAILABLE.name();
                             col.addSelect(Css.formSelect).setName(STATUS).addSelectOptions(selectValue, statuses);
                         }
                         try (var col = row.addDiv(Css.colMd3)) {
@@ -163,138 +168,70 @@ public class PetServlet extends HttpServlet {
         }
     }
 
-    /** Renders buy form */
-    private void buyForm(Pet pet, Element tdActions) {
-        try (var form = tdActions.addForm(Css.dInline).setMethod(Html.V_POST).setAction("?action=" + Action.BUY.name())) {
-            form.addHiddenInput(ID.toString(), pet.id());
-            var btn = form.addSubmitButton(Css.btn, Css.btnSm, Css.btnSuccess);
-            if (!Status.AVAILABLE.name().equals(pet.status())) btn.setAttr("disabled", "disabled");
-            btn.addText("Buy");
+    /** Renders action buttons in a single form using button names to distinguish actions */
+    private void buttonBar(Pet pet, Element tdActions) {
+        try (var form = tdActions.addForm(Css.dInline).setMethod(Html.V_POST)) {
+            var available = Status.AVAILABLE.equals(pet.status());
+            form.addSubmitButton(Css.btn, Css.btnSm, Css.btnSuccess)
+                    .setNameValue(Action.BUY, pet.id())
+                    .setAttr(available ? null : "disabled", "disabled")
+                    .addText("Buy");
+            form.addSubmitButton(Css.btn, Css.btnSm, Css.btnOutlinePrimary, Css.ms1)
+                    .setNameValue(Action.EDIT, pet.id())
+                    .addText("Edit");
+            form.addSubmitButton(Css.btn, Css.btnSm, Css.btnOutlineDanger, Css.ms1)
+                    .setNameValue(Action.DELETE, pet.id())
+                    .addText("Delete");
         }
     }
 
-    /** Renders edit form */
-    private void editForm(Pet pet, Element tdActions) {
-        try (var form = tdActions.addForm(Css.dInline, Css.ms1).setMethod(Html.V_GET).setAction("")) {
-            form.addHiddenInput(ACTION.toString(), Action.EDIT.name());
-            form.addHiddenInput(ID.toString(), pet.id());
-            form.addSubmitButton(Css.btn, Css.btnSm, Css.btnOutlinePrimary).addText("Edit");
-        }
+    String statusName(Status status) {
+        return switch (status) {
+            case AVAILABLE -> "Available";
+            case PENDING -> "Pending";
+            default -> "Sold";
+        };
     }
 
-    /** Renders delete form */
-    private void deleteForm(Pet pet, Element tdActions) {
-        try (var form = tdActions.addForm(Css.dInline, Css.ms1).setMethod(Html.V_POST).setAction("?action=" + Action.DELETE.name())) {
-            form.addHiddenInput(ID.toString(), pet.id());
-            form.addSubmitButton(Css.btn, Css.btnSm, Css.btnOutlineDanger).addText("Delete");
-        }
+    String statusCss(Status status) {
+        return switch (status) {
+            case AVAILABLE -> Css.bgSuccess;
+            case PENDING -> Css.bgWarning;
+            default -> Css.bgSecondary;
+        };
     }
 
     /** Servlet attributes */
     enum Attrib implements HttpParameter {
         /** Action parameter */
-        ACTION("action"),
+        ACTION,
         /** Pet ID */
-        ID("id"),
+        ID,
         /** Pet name */
-        NAME("name"),
+        NAME,
         /** Pet status */
-        STATUS("status"),
+        STATUS,
         /** Category ID */
-        CATEGORY_ID("categoryId");
-
-        private final String paramName;
-
-        Attrib(String name) {
-            this.paramName = name;
-        }
+        CATEGORY_ID;
 
         @Override
         public String toString() {
-            return paramName;
+            return name().toLowerCase().replace('_', '-');
         }
     }
 
     /** Action types */
-    enum Action {
-        BUY, DELETE, SAVE, EDIT;
+    enum Action implements HttpParameter {
+        BUY, DELETE, SAVE, EDIT, UNKNOWN;
 
-        public boolean equalsName(String name) {
-            return name().equals(name);
-        }
-    }
-
-    /** Pet statuses */
-    enum Status {
-        AVAILABLE("Available", Css.bgSuccess),
-        PENDING("Pending", Css.bgWarning),
-        SOLD("Sold", Css.bgSecondary);
-
-        private final String displayName;
-        private final String badgeClass;
-
-        Status(String displayName, String badgeClass) {
-            this.displayName = displayName;
-            this.badgeClass = badgeClass;
+        @Override
+        public String toString() {
+            return name().toLowerCase();
         }
 
-        /** Gets the display name */
-        public String getDisplayName() {
-            return displayName;
+        /** Returns Action by name with a default UNKNOWN value */
+        public static Action paramValueOf(String name) {
+            return HttpParameter.paramValueOf(Action.class, name, UNKNOWN);
         }
-
-        /** Gets the badge CSS class */
-        public String getBadgeClass() {
-            return badgeClass;
-        }
-
-        /** Finds status by string name */
-        public static Status findByName(String name) {
-            var result = SOLD;
-            for (var status : values()) {
-                if (status.name().equals(name)) {
-                    result = status;
-                    break;
-                }
-            }
-            return result;
-        }
-    }
-
-    /** CSS constants */
-    static final class Css {
-        static final String alignItemsCenter = "align-items-center";
-        static final String badge = "badge";
-        static final String bgSecondary = "bg-secondary";
-        static final String bgSuccess = "bg-success";
-        static final String bgWarning = "bg-warning";
-        static final String borderBottom = "border-bottom";
-        static final String btn = "btn";
-        static final String btnOutlineDanger = "btn-outline-danger";
-        static final String btnOutlinePrimary = "btn-outline-primary";
-        static final String btnPrimary = "btn-primary";
-        static final String btnSm = "btn-sm";
-        static final String btnSuccess = "btn-success";
-        static final String colMd2 = "col-md-2";
-        static final String colMd3 = "col-md-3";
-        static final String colMd4 = "col-md-4";
-        static final String container = "container";
-        static final String dFlex = "d-flex";
-        static final String dInline = "d-inline";
-        static final String formControl = "form-control";
-        static final String formSelect = "form-select";
-        static final String g3 = "g-3";
-        static final String justifyContentBetween = "justify-content-between";
-        static final String mb3 = "mb-3";
-        static final String mb4 = "mb-4";
-        static final String ms1 = "ms-1";
-        static final String mt5 = "mt-5";
-        static final String pb3 = "pb-3";
-        static final String row = "row";
-        static final String table = "table";
-        static final String tableDark = "table-dark";
-        static final String tableHover = "table-hover";
-        static final String textPrimary = "text-primary";
-        static final String w100 = "w-100";
     }
 }

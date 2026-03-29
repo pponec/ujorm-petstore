@@ -12,6 +12,8 @@ import org.ujorm.petstore.Entities.Customer;
 import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
 import org.ujorm.tools.Check;
+import org.ujorm.petstore.Constants.Status;
+
 
 /** Main Spring Boot Application and Service wrapper */
 @SpringBootApplication
@@ -53,27 +55,27 @@ public class AppPetStore {
         }
 
         /** Processes a pet purchase
-         * @param petId Optional pet identeifier do nothing.
+         * @param petId Optional pet identifier do nothing.
          */
         public PetOrder buyPet(Long petId) {
             if (petId == null) {
                 return null;
             }
-            var pet = dao.getPet().findById(petId)
-                    .orElseThrow(() -> new IllegalStateException("Pet not found."));
+            var pet = dao.getPet().findById(petId).orElseThrow(() ->
+                    new IllegalStateException("Pet not found."));
 
-            if (!"AVAILABLE".equals(pet.status())) {
+            if (!Status.AVAILABLE.equals(pet.status())) {
                 throw new IllegalStateException("Pet is not available.");
             }
 
-            var soldPet = new Pet(pet.id(), pet.name(), "SOLD", pet.category());
+            var soldPet = new Pet(pet.id(), pet.name(), Status.SOLD, pet.category());
             dao.getPet().update(soldPet);
 
             return dao.getOrder().insert(new PetOrder(null, getCurrentCustomer(), soldPet));
         }
 
         /** Saves or updates a pet */
-        public void savePet(Long id, String name, String status, Long categoryId) {
+        public void savePet(Long id, String name, Status status, Long categoryId) {
             var extName = Check.isEmpty(name) ? "?" : name;
             var category = getCategories().stream()
                     .filter(c -> c.id().equals(categoryId)).findFirst().orElseThrow();
@@ -87,7 +89,7 @@ public class AppPetStore {
 
         /**
          * Deletes a pet
-         * @param id Optional pet identifier do nothong.
+         * @param id Optional pet identifier do nothing.
          */
         public void deletePet(Long id) {
             if (id != null) {
