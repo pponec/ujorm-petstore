@@ -75,7 +75,11 @@ public class Dao {
         /** Finds all pets including their categories */
         public List<Pet> findAll() {
             var sql = """
-                    SELECT ${COLUMNS}
+                    SELECT p.id AS ${p.id}
+                    , p.name    AS ${p.name}
+                    , p.status  AS ${p.status}
+                    , c.id      AS ${c.id}                    
+                    , c.name    AS ${c.name}
                     FROM pet p
                     LEFT JOIN category c ON c.id = p.category_id
                     ORDER BY p.id
@@ -83,11 +87,11 @@ public class Dao {
 
             return SqlQuery.run(getConnection(), query -> query
                     .sql(sql)
-                    .column("p.id", MetaPet.id)
-                    .column("p.name", MetaPet.name)
-                    .column("p.status", MetaPet.status)
-                    .column("c.id", MetaPet.category, MetaCategory.id)
-                    .column("c.name", MetaPet.category, MetaCategory.name)
+                    .label("p.id", MetaPet.id)
+                    .label("p.name", MetaPet.name)
+                    .label("p.status", MetaPet.status)
+                    .label("c.id", MetaPet.category, MetaCategory.id)
+                    .label("c.name", MetaPet.category, MetaCategory.name)
                     .streamMap(PET_EM.mapper())
                     .toList());
         }

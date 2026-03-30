@@ -44,12 +44,22 @@ public class PetServlet extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         var ctx = HttpContext.ofServlet(req, resp);
+        var contextPath = req.getContextPath();
         var action = ctx.parameter(ACTION, Action::paramValueOf);
         var petId = ctx.parameter(ID, Long::parseLong);
+        var pets = services.getPets();
+        var categories = services.getCategories();
         var petToEdit = (Action.EDIT.equals(action) && petId != null)
                 ? services.getPetById(petId).orElse(null)
                 : null;
-        renderPage(ctx, petToEdit, services.getPets(), services.getCategories(), req.getContextPath());
+
+        try (var html = HtmlElement.of(ctx, BOOTSTRAP_CSS)) {
+            try (var body = html.addBody(Css.container, Css.mt5)) {
+                renderHeader(body, contextPath);
+                renderTable(body, pets);
+                renderForm(body, petToEdit, categories);
+            }
+        }
     }
 
     /** Handles POST requests to modify data using a unified action detection */
@@ -89,81 +99,91 @@ public class PetServlet extends HttpServlet {
         resp.sendRedirect(resultUrl);
     }
 
-    /** Renders the main HTML page */
-    private void renderPage(HttpContext ctx, Pet petToEdit,
-                            List<Pet> pets,
-                            List<Category> categories,
-                            String contextPath) {
-        try (var html = HtmlElement.of(ctx, BOOTSTRAP_CSS)) {
-            try (var body = html.addBody(Css.container, Css.mt5)) {
-                try (var header = body.addDiv(
-                        Css.dFlex,
-                        Css.justifyContentBetween,
-                        Css.alignItemsCenter,
-                        Css.mb4,
-                        Css.borderBottom,
-                        Css.pb3)) {
-                    header.addHeading(1, "Ujorm PetStore", Css.textPrimary);
-                    header.addAnchor(contextPath + "/")
-                            .addImage(contextPath + "/images/ujorm3-logo.png", "Ujorm Logo")
-                            .setAttr("width", 150).setAttr("height", 150);
-                }
+    /**
+     * Renders the page header
+     * @param body The body element
+     * @param contextPath The application context path
+     */
+    private void renderHeader(Element body, String contextPath) {
+        try (var header = body.addDiv(
+                Css.dFlex,
+                Css.justifyContentBetween,
+                Css.alignItemsCenter,
+                Css.mb4,
+                Css.borderBottom,
+                Css.pb3)) {
+            header.addHeading(1, "Ujorm PetStore", Css.textPrimary);
+            header.addAnchor(contextPath + "/")
+                    .addImage(contextPath + "/images/ujorm3-logo.png", "Ujorm Logo")
+                    .setAttr("width", 150).setAttr("height", 150);
+        }
+    }
 
-                // Table
-                body.addHeading(2, "Available Pets", Css.mb3);
-                try (var table = body.addTable(Css.table, Css.tableHover)) {
-                    try (var headRow = table.addTableHead(Css.tableDark).addTableRow()) {
-                        headRow.addTableDetail().addText("ID");
-                        headRow.addTableDetail().addText("Name");
-                        headRow.addTableDetail().addText("Status");
-                        headRow.addTableDetail().addText("Category");
-                        headRow.addTableDetail().addText("Actions");
-                    }
-                    try (var tbody = table.addTableBody()) {
-                        for (var pet : pets) {
-                            try (var row = tbody.addTableRow()) {
-                                row.addTableDetail().addText(pet.id());
-                                row.addTableDetail().addText(pet.name());
+    /**
+     * Renders the table of available pets
+     * @param body The body element
+     * @param pets List of pets to display
+     */
+    private void renderTable(Element body, List<Pet> pets) {
+        body.addHeading(2, "Available Pets", Css.mb3);
+        try (var table = body.addTable(Css.table, Css.tableHover)) {
+            try (var headRow = table.addTableHead(Css.tableDark).addTableRow()) {
+                headRow.addTableDetail().addText("ID");
+                headRow.addTableDetail().addText("Name");
+                headRow.addTableDetail().addText("Status");
+                headRow.addTableDetail().addText("Category");
+                headRow.addTableDetail().addText("Actions");
+            }
+            try (var tbody = table.addTableBody()) {
+                for (var pet : pets) {
+                    try (var row = tbody.addTableRow()) {
+                        row.addTableDetail().addText(pet.id());
+                        row.addTableDetail().addText(pet.name());
 
-                                var statusCss = statusCss(pet.status());
-                                var statusName = statusName(pet.status());
-                                row.addTableDetail().addSpan(Css.badge, statusCss).addText(statusName);
-                                row.addTableDetail().addText(pet.category() != null ? pet.category().name() : "");
-                                buttonBar(pet, row.addTableDetail());
-                            }
-                        }
-                    }
-                }
-
-                // Form
-                body.addHeading(2, petToEdit == null ? "Add New Pet" : "Edit Pet", Css.mt5);
-                try (var form = body.addForm().setMethod(Html.V_POST).setAction("?" + ACTION + "=" + Action.SAVE)) {
-                    if (petToEdit != null) form.addHiddenInput(ID, petToEdit.id());
-                    try (var row = form.addDiv(Css.row, Css.g3)) {
-                        try (var col = row.addDiv(Css.colMd4)) {
-                            col.addTextInput(Css.formControl).setNameValue(NAME, petToEdit != null ? petToEdit.name() : "").setAttr("placeholder", "Name");
-                        }
-                        try (var col = row.addDiv(Css.colMd3)) {
-                            var selectValue = petToEdit != null ? petToEdit.status() : Status.AVAILABLE;
-                            var statuses = new EnumMap<Status, String>(Status.class);
-                            for (var status : Status.values()) {
-                                statuses.put(status, statusName(status));
-                            }
-                            col.addSelect(Css.formSelect).setName(STATUS).addSelectOptions(selectValue, statuses);
-                        }
-                        try (var col = row.addDiv(Css.colMd3)) {
-                            var select = col.addSelect(Css.formSelect).setName(CATEGORY_ID);
-                            for (var cat : categories) {
-                                var opt = select.addElement("option").setAttr("value", cat.id());
-                                if (petToEdit != null && petToEdit.category() != null && cat.id().equals(petToEdit.category().id())) {
-                                    opt.setAttr("selected", "selected");
-                                }
-                                opt.addText(cat.name());
-                            }
-                        }
-                        row.addDiv(Css.colMd2).addSubmitButton(Css.btn, Css.btnPrimary, Css.w100).addText("Save");
+                        var statusCss = statusCss(pet.status());
+                        var statusName = statusName(pet.status());
+                        row.addTableDetail().addSpan(Css.badge, statusCss).addText(statusName);
+                        row.addTableDetail().addText(pet.category() != null ? pet.category().name() : "");
+                        buttonBar(pet, row.addTableDetail());
                     }
                 }
+            }
+        }
+    }
+
+    /**
+     * Renders the form for adding or editing a pet
+     * @param body The body element
+     * @param petToEdit The pet to edit, or null for a new pet
+     * @param categories List of available categories
+     */
+    private void renderForm(Element body, Pet petToEdit, List<Category> categories) {
+        body.addHeading(2, petToEdit == null ? "Add New Pet" : "Edit Pet", Css.mt5);
+        try (var form = body.addForm().setMethod(Html.V_POST).setAction("?" + ACTION + "=" + Action.SAVE)) {
+            if (petToEdit != null) form.addHiddenInput(ID, petToEdit.id());
+            try (var row = form.addDiv(Css.row, Css.g3)) {
+                try (var col = row.addDiv(Css.colMd4)) {
+                    col.addTextInput(Css.formControl).setNameValue(NAME, petToEdit != null ? petToEdit.name() : "").setAttr("placeholder", "Name");
+                }
+                try (var col = row.addDiv(Css.colMd3)) {
+                    var selectValue = petToEdit != null ? petToEdit.status() : Status.AVAILABLE;
+                    var statuses = new EnumMap<Status, String>(Status.class);
+                    for (var status : Status.values()) {
+                        statuses.put(status, statusName(status));
+                    }
+                    col.addSelect(Css.formSelect).setName(STATUS).addSelectOptions(selectValue, statuses);
+                }
+                try (var col = row.addDiv(Css.colMd3)) {
+                    var select = col.addSelect(Css.formSelect).setName(CATEGORY_ID);
+                    for (var cat : categories) {
+                        var opt = select.addElement("option").setAttr("value", cat.id());
+                        if (petToEdit != null && petToEdit.category() != null && cat.id().equals(petToEdit.category().id())) {
+                            opt.setAttr("selected", "selected");
+                        }
+                        opt.addText(cat.name());
+                    }
+                }
+                row.addDiv(Css.colMd2).addSubmitButton(Css.btn, Css.btnPrimary, Css.w100).addText("Save");
             }
         }
     }
