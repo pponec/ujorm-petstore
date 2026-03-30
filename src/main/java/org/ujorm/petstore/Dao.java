@@ -3,8 +3,7 @@ package org.ujorm.petstore;
 import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
-import javax.sql.DataSource;
-import org.springframework.jdbc.datasource.DataSourceUtils;
+import java.util.function.Supplier;
 import org.springframework.stereotype.Repository;
 import org.ujorm.orm.SqlQuery;
 import org.ujorm.orm.core.EntityManager;
@@ -22,8 +21,8 @@ public class Dao {
     private static final EntityManager<Customer, Long> CUSTOMER_EM = EntityManager.of(Customer.class);
     private static final EntityManager<PetOrder, Long> ORDER_EM = EntityManager.of(PetOrder.class);
 
-    /** Current data source managed by Spring */
-    private final DataSource dataSource;
+    /** Provider of the transaction-aware connection */
+    private final Supplier<Connection> connection;
 
     /** Internal DAO instances */
     private final CategoryDao categoryDao = new CategoryDao();
@@ -31,9 +30,9 @@ public class Dao {
     private final PetDao petDao = new PetDao();
     private final PetOrderDao orderDao = new PetOrderDao();
 
-    /** Creates a new Dao with the given data source */
-    public Dao(DataSource dataSource) {
-        this.dataSource = dataSource;
+    /** Creates a new Dao with the connection supplier */
+    public Dao(Supplier<Connection> connection) {
+        this.connection = connection;
     }
 
     /** Provides access to categories */
@@ -53,7 +52,7 @@ public class Dao {
 
         /** Finds all categories */
         public List<Category> findAll() {
-            return CATEGORY_EM.crud(getConnection())
+            return CATEGORY_EM.crud(connection.get())
                     .selectWhere("", builder -> builder
                     .streamMap(CATEGORY_EM.mapper())
                     .toList());
@@ -65,7 +64,7 @@ public class Dao {
 
         /** Finds customer by ID */
         public Optional<Customer> findById(Long id) {
-            return CUSTOMER_EM.crud(getConnection()).findById(id);
+            return CUSTOMER_EM.crud(connection.get()).findById(id);
         }
     }
 
@@ -85,7 +84,7 @@ public class Dao {
                     ORDER BY p.id
                     """;
 
-            return SqlQuery.run(getConnection(), query -> query
+            return SqlQuery.run(connection.get(), query -> query
                     .sql(sql)
                     .label("p.id", MetaPet.id)
                     .label("p.name", MetaPet.name)
@@ -98,22 +97,22 @@ public class Dao {
 
         /** Finds pet by ID */
         public Optional<Pet> findById(Long id) {
-            return PET_EM.crud(getConnection()).findById(id);
+            return PET_EM.crud(connection.get()).findById(id);
         }
 
         /** Inserts a new pet */
         public Pet insert(Pet pet) {
-            return PET_EM.crud(getConnection()).insert(pet);
+            return PET_EM.crud(connection.get()).insert(pet);
         }
 
         /** Updates an existing pet */
         public void update(Pet pet) {
-            PET_EM.crud(getConnection()).update(pet);
+            PET_EM.crud(connection.get()).update(pet);
         }
 
         /** Deletes a pet */
         public void delete(Pet pet) {
-            PET_EM.crud(getConnection()).delete(pet);
+            PET_EM.crud(connection.get()).delete(pet);
         }
     }
 
@@ -122,29 +121,7 @@ public class Dao {
 
         /** Inserts a new order */
         public PetOrder insert(PetOrder order) {
-            return ORDER_EM.crud(getConnection()).insert(order);
+            return ORDER_EM.crud(connection.get()).insert(order);
         }
-    }
-
-    /**
-     * Returns a standard JDBC Connection that is fully managed by the Spring Framework.
-     * <p>
-     * This method is <strong>transaction-aware</strong>. It uses {@link DataSourceUtils}
-     * to either retrieve an existing connection bound to the current thread
-     * (if a transaction is active) or creates a new one.
-     * </p>
-     * <p>
-     * <strong>Lifecycle Management:</strong> The opening and closing of the connection
-     * is automatically handled by Spring's {@code PlatformTransactionManager}.
-     * This is typically triggered by the {@code @Transactional} annotation in the service layer.
-     * Manual closing of the connection is not required and should be avoided to prevent
-     * breaking the transaction synchronization.
-     * </p>
-     *
-     * @return a transaction-aware JDBC Connection
-     * @see org.springframework.jdbc.datasource.DataSourceUtils#getConnection(DataSource)
-     */
-    private Connection getConnection() {
-        return DataSourceUtils.getConnection(dataSource);
     }
 }

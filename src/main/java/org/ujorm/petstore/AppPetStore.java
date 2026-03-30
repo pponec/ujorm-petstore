@@ -1,10 +1,15 @@
 package org.ujorm.petstore;
 
+import java.sql.Connection;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Supplier;
+import javax.sql.DataSource;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 import org.springframework.boot.web.servlet.ServletComponentScan;
+import org.springframework.context.annotation.Bean;
+import org.springframework.jdbc.datasource.DataSourceUtils;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.ujorm.petstore.Entities.Category;
@@ -13,7 +18,6 @@ import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
 import org.ujorm.tools.Check;
 import org.ujorm.petstore.Constants.Status;
-
 
 /** Main Spring Boot Application and Service wrapper */
 @SpringBootApplication
@@ -54,7 +58,8 @@ public class AppPetStore {
                     new IllegalStateException("Default customer is missing."));
         }
 
-        /** Processes a pet purchase
+        /**
+         * Processes a pet purchase
          * @param petId Optional pet identifier do nothing.
          */
         public PetOrder buyPet(Long petId) {
@@ -97,6 +102,30 @@ public class AppPetStore {
                 dao.getPet().delete(pet);
             }
         }
+    }
+
+    /**
+     * Provides a supplier of standard JDBC Connections fully managed by the Spring Framework.
+     * <p>
+     * The supplied connection is <strong>transaction-aware</strong>. It uses {@link DataSourceUtils}
+     * to either retrieve an existing connection bound to the current thread
+     * (if a transaction is active) or creates a new one.
+     * </p>
+     * <p>
+     * <strong>Lifecycle Management:</strong> The opening and closing of the connection
+     * is automatically handled by Spring's {@code PlatformTransactionManager}.
+     * This is typically triggered by the {@code @Transactional} annotation in the service layer.
+     * Manual closing of the connection is not required and should be avoided to prevent
+     * breaking the transaction synchronization.
+     * </p>
+     *
+     * @param dataSource the underlying data source managed by Spring
+     * @return a Supplier providing a transaction-aware JDBC Connection
+     * @see org.springframework.jdbc.datasource.DataSourceUtils#getConnection(DataSource)
+     */
+    @Bean
+    public Supplier<Connection> connectionSupplier(DataSource dataSource) {
+        return () -> DataSourceUtils.getConnection(dataSource);
     }
 
     /** Application entry point */
