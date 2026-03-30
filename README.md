@@ -67,7 +67,7 @@ This project highlights a refreshing, "rebellious" approach to Java web developm
 * **Pros & Use Cases:** It completely eliminates the typical JPA nightmares—no unpredictable `LazyInitializationException`, hidden cascading saves, or unexpected N+1 select issues.
  Immutable entities and type-safe mapping make it an excellent choice for microservices, fast API backends, or reporting tools where developers need absolute control over the database queries without the boilerplate of plain JDBC.
 * **The SQL Transparency Advantage:** Unlike strict Java DSLs (like jOOQ) that abstract the SQL entirely, Ujorm allows you to write raw, native SQL that can be easily copied, executed, and debugged in any standard JDBC client (like DBeaver or DataGrip).
- By utilizing methods like `label()` instead of `column()` in complex scenarios, you can map the result set to your Java records with full type safety, without altering or degrading the actual executable SQL statement.
+ By utilizing methods like `label()` in complex scenarios, you can map the result set to your Java records with full type safety, without altering or degrading the actual executable SQL statement.
  This perfectly bridges the gap between pure SQL control and safe object mapping.
 * **Alternatives:** jOOQ, Spring Data JDBC, MyBatis.
 
