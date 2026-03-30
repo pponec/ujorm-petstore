@@ -9,46 +9,39 @@ public class Entities {
     /** Category of the pet */
     @Table(name = "category")
     public record Category(
-            /** Gets the primary key */
+            /** The primary key */
             @Id
-            @Column(name = "id")
             Long id,
 
-            /** Gets the category name */
-            @Column(name = "name")
+            /** The category name */
             String name
     ) {}
 
     /** Customer entity */
     @Table(name = "customer")
     public record Customer(
-            /** Gets the primary key */
+            /** The primary key */
             @Id
-            @Column(name = "id")
             Long id,
 
-            /** Gets the customer name */
-            @Column(name = "name")
+            /** The customer name */
             String name
     ) {}
 
     /** Pet entity */
     @Table(name = "pet")
     public record Pet(
-            /** Gets the primary key */
+            /** The primary key */
             @Id
-            @Column(name = "id")
             Long id,
 
-            /** Gets the pet name */
-            @Column(name = "name")
+            /** The pet name */
             String name,
 
-            /** Gets the pet status */
-            @Column(name = "status")
+            /** The pet status */
             Status status,
 
-            /** Gets the category */
+            /** The category */
             @Column(name = "category_id")
             Category category
     ) {}
@@ -56,16 +49,15 @@ public class Entities {
     /** Order for a pet */
     @Table(name = "pet_order")
     public record PetOrder(
-            /** Gets the primary key */
+            /** The primary key */
             @Id
-            @Column(name = "id")
             Long id,
 
-            /** Gets the customer */
+            /** The customer */
             @Column(name = "customer_id")
             Customer customer,
 
-            /** Gets the ordered pet */
+            /** The ordered pet */
             @Column(name = "pet_id")
             Pet pet
     ) {}
