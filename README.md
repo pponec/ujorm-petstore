@@ -1,6 +1,7 @@
 # Ujorm PetStore
 
-Ujorm PetStore is a practical showcase of a web application built on **Spring Boot 3.5** and **Ujorm 3**.
+Ujorm PetStore is a practical showcase of a web application built on **Spring Boot 3.5** and 
+[**Ujorm 3**](https://github.com/pponec/ujorm/tree/ujorm3?tab=readme-ov-file#-ujorm3-library).
 The project serves as an inspiration for developing web applications with an emphasis on straightforwardness, maximum type safety, and zero hidden "magic".
 
 Just pure Java, full control over generated SQL, and HTML rendered safely straight from the code.
@@ -49,7 +50,6 @@ The application demonstrates the power of two core Ujorm3 modules that streamlin
 
 1. Ensure you have **JDK 25** and **Maven** installed.
 2. Run in the root directory:
-3. 
    ```bash
    mvn spring-boot:run
    ```
@@ -67,3 +67,12 @@ This "rebellious" architecture is ideal for developers seeking a simpler alterna
 **Alternative Comparison:**
 * **ORM:** MyBatis, Jdbi, Spring Data JDBC.
 * **Web:** j2html, Wicket, Vaadin.
+
+---
+
+## Benchmarks & Resources
+
+For more technical details and performance metrics, please visit:
+* [**Ujorm 3 Library**](https://github.com/pponec/ujorm/tree/ujorm3?tab=readme-ov-file#-ujorm3-library) – The official project page.
+* [**ORM Benchmark**](https://github.com/pponec/orm-benchmarks?tab=readme-ov-file#orm-benchmark) – Compare the performance of Ujorm ORM with other frameworks.
+* [**HTML Builder Benchmark**](https://github.com/pponec/html-benchmarks?tab=readme-ov-file#html-builder-benchmark) – See how the `ujo-web` module stands against other HTML rendering engines.
