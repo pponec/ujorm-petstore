@@ -1,6 +1,6 @@
 # Ujorm PetStore
 
-Ujorm PetStore is a practical showcase of a web application built on **Spring Boot 3.5** and 
+Ujorm PetStore is a practical showcase of a web application built on **Spring Boot 3.5** and
 [**Ujorm 3**](https://github.com/pponec/ujorm/tree/ujorm3?tab=readme-ov-file#-ujorm3-library).
 The project serves as an inspiration for developing web applications with an emphasis on straightforwardness, maximum type safety, and zero hidden "magic".
 
@@ -40,11 +40,11 @@ The application demonstrates the power of two core Ujorm3 modules that streamlin
 
 ## Project Structure
 
-* `AppPetStore.java` – Main Spring Boot class and transactional service layer.
-* `Dao.java` – Data access layer integrating Spring JDBC with Ujorm `EntityManager`.
-* `Entities.java` – Database schema definitions using Java records.
-* `PetServlet.java` – A stateless Servlet acting as both Controller and View. It handles HTTP communication (PRG pattern) and builds the HTML.
-* `Constants.java` – Shared enums (`Status`) and CSS classes.
+* [AppPetStore.java](src/main/java/org/ujorm/petstore/AppPetStore.java) – Main Spring Boot class and transactional service layer.
+* [Dao.java](src/main/java/org/ujorm/petstore/Dao.java) – Data access layer integrating Spring JDBC with Ujorm `EntityManager`.
+* [Entities.java](src/main/java/org/ujorm/petstore/Entities.java) – Database schema definitions using Java records.
+* [PetServlet.java](src/main/java/org/ujorm/petstore/PetServlet.java) – A stateless Servlet acting as both Controller and View. It handles HTTP communication (PRG pattern) and builds the HTML.
+* [Constants.java](src/main/java/org/ujorm/petstore/Constants.java) – Shared enums (`Status`) and CSS classes.
 
 ## How to Run the Project
 
