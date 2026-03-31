@@ -77,10 +77,11 @@ public class Dao {
                     SELECT p.id AS ${p.id}
                     , p.name    AS ${p.name}
                     , p.status  AS ${p.status}
-                    , c.id      AS ${c.id}                    
+                    , c.id      AS ${c.id}
                     , c.name    AS ${c.name}
                     FROM pet p
                     LEFT JOIN category c ON c.id = p.category_id
+                    WHERE p.id >= :id
                     ORDER BY p.id
                     """;
 
@@ -91,6 +92,7 @@ public class Dao {
                     .label("p.status", MetaPet.status)
                     .label("c.id", MetaPet.category, MetaCategory.id)
                     .label("c.name", MetaPet.category, MetaCategory.name)
+                    .bind("id", 1L)
                     .streamMap(PET_EM.mapper())
                     .toList());
         }
