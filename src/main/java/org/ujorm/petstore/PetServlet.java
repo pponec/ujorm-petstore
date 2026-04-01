@@ -46,7 +46,7 @@ public class PetServlet extends HttpServlet {
         var ctx = HttpContext.ofServlet(req, resp);
         var contextPath = req.getContextPath();
         var action = ctx.parameter(ACTION, Action::paramValueOf);
-        var petId = ctx.parameter(ID, Long::parseLong);
+        var petId = ctx.parameter(PET_ID, Long::parseLong);
         var pets = services.getPets();
         var categories = services.getCategories();
         var petToEdit = (Action.EDIT.equals(action) && petId != null)
@@ -62,37 +62,21 @@ public class PetServlet extends HttpServlet {
         }
     }
 
-    /** Handles POST requests to modify data using a unified action detection */
+    /** Handles POST requests to modify data using a standardized action detection */
     @Override
     protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
         var ctx = HttpContext.ofServlet(req, resp);
-        var action = Action.UNKNOWN;
-        var idParam = (Long) null;
-
-        // 1. Try to detect action and pet ID from button names (for the table form)
-        for (var actionName : Action.values()) {
-            var val = ctx.parameter(actionName, Long::parseLong);
-            if (val != null) {
-                action = actionName;
-                idParam = val;
-                break;
-            }
-        }
-
-        // 2. Fallback for the "Save" form which uses explicit URL parameters
-        if (action == Action.UNKNOWN) {
-            action = ctx.parameter(ACTION, Action::paramValueOf);
-            idParam = ctx.parameter(ID, Long::parseLong);
-        }
-
+        var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
+        var petId = ctx.parameter(PET_ID, Long::parseLong);
         var resultUrl = req.getContextPath() + "/";
+
         switch (action) {
-            case BUY -> services.buyPet(idParam);
-            case DELETE -> services.deletePet(idParam);
-            case EDIT -> resultUrl += "?" + ACTION + "=" + Action.EDIT + "&" + ID + "=" + idParam;
-            case SAVE -> services.savePet(idParam,
+            case BUY -> services.buyPet(petId);
+            case DELETE -> services.deletePet(petId);
+            case EDIT -> resultUrl += "?" + ACTION + "=" + Action.EDIT + "&" + PET_ID + "=" + petId;
+            case SAVE -> services.savePet(petId,
                     ctx.parameter(NAME, ""),
-                    ctx.parameter(STATUS, s -> Status.valueOf(s.toUpperCase())), // POP?
+                    ctx.parameter(STATUS, s -> Status.valueOf(s.toUpperCase())),
                     ctx.parameter(CATEGORY_ID, Long::parseLong));
         }
         // Prevents duplicate form submissions (PRG pattern)
@@ -160,7 +144,7 @@ public class PetServlet extends HttpServlet {
     private void renderForm(Element body, Pet petToEdit, List<Category> categories) {
         body.addHeading(2, petToEdit == null ? "Add New Pet" : "Edit Pet", Css.mt5);
         try (var form = body.addForm().setMethod(Html.V_POST).setAction("?" + ACTION + "=" + Action.SAVE)) {
-            if (petToEdit != null) form.addHiddenInput(ID, petToEdit.id());
+            if (petToEdit != null) form.addHiddenInput(PET_ID, petToEdit.id());
             try (var row = form.addDiv(Css.row, Css.g3)) {
                 try (var col = row.addDiv(Css.colMd4)) {
                     col.addTextInput(Css.formControl).setNameValue(NAME, petToEdit != null ? petToEdit.name() : "").setAttr("placeholder", "Name");
@@ -188,23 +172,25 @@ public class PetServlet extends HttpServlet {
         }
     }
 
-    /** Renders action buttons in a single form using button names to distinguish actions */
+    /** Renders action buttons with a hidden ID and standard action name */
     private void buttonBar(Pet pet, Element tdActions) {
         try (var form = tdActions.addForm(Css.dInline).setMethod(Html.V_POST)) {
+            form.addHiddenInput(PET_ID, pet.id());
             var available = Status.AVAILABLE.equals(pet.status());
             form.addSubmitButton(Css.btn, Css.btnSm, Css.btnSuccess)
-                    .setNameValue(Action.BUY, pet.id())
+                    .setNameValue(ACTION, Action.BUY)
                     .setAttr(available ? null : "disabled", "disabled")
                     .addText("Buy");
             form.addSubmitButton(Css.btn, Css.btnSm, Css.btnOutlinePrimary, Css.ms1)
-                    .setNameValue(Action.EDIT, pet.id())
+                    .setNameValue(ACTION, Action.EDIT)
                     .addText("Edit");
             form.addSubmitButton(Css.btn, Css.btnSm, Css.btnOutlineDanger, Css.ms1)
-                    .setNameValue(Action.DELETE, pet.id())
+                    .setNameValue(ACTION, Action.DELETE)
                     .addText("Delete");
         }
     }
 
+    /** Returns a label for the status */
     String statusName(Status status) {
         return switch (status) {
             case AVAILABLE -> "Available";
@@ -213,6 +199,7 @@ public class PetServlet extends HttpServlet {
         };
     }
 
+    /** Returns CSS class for the status badge */
     String statusCss(Status status) {
         return switch (status) {
             case AVAILABLE -> Css.bgSuccess;
@@ -226,7 +213,7 @@ public class PetServlet extends HttpServlet {
         /** Action parameter */
         ACTION,
         /** Pet ID */
-        ID,
+        PET_ID,
         /** Pet name */
         NAME,
         /** Pet status */
