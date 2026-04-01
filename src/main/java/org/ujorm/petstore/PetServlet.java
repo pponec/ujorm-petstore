@@ -81,7 +81,7 @@ public class PetServlet extends HttpServlet {
 
         // 2. Fallback for the "Save" form which uses explicit URL parameters
         if (action == Action.UNKNOWN) {
-            action = Action.paramValueOf(ctx.parameter(ACTION, ""));
+            action = ctx.parameter(ACTION, Action::paramValueOf);
             idParam = ctx.parameter(ID, Long::parseLong);
         }
 
