@@ -28,6 +28,62 @@ The application demonstrates the power of two core Ujorm3 modules that streamlin
 ### 3. Safe Request Handling
 * **HttpParameter Interface:** Uses `enum` implementations to centralize web parameter definitions, protecting the application from mapping errors or form-name typos.
 
+## Code Samples
+
+The project is designed with an emphasis on straightforwardness.
+The following example from a stateless servlet demonstrates how elegantly logic, parameters, and HTML generation can be connected:
+
+```java
+protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
+    var ctx = HttpContext.ofServlet(req, resp);
+    var contextPath = req.getContextPath();
+    var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
+    var petId = ctx.parameter(PET_ID, Long::parseLong);
+    var pets = services.getPets();
+    var categories = services.getCategories();
+    var petToEdit = switch(action) {
+        case EDIT -> services.getPetById(petId);
+        default -> Optional.<Pet>empty(); };
+
+    try (var html = HtmlElement.of(ctx, BOOTSTRAP_CSS)) {
+        try (var body = html.addBody(Css.container, Css.mt5)) {
+            renderHeader(body, contextPath);
+            renderTable(body, pets);
+            renderForm(body, petToEdit, categories);
+        }
+    }
+}
+```
+
+Here is what a native SQL query looks like in pure Java:
+
+```java
+public List<Pet> findAll() {
+    var sql = """
+            SELECT p.id AS ${p.id}
+            , p.name    AS ${p.name}
+            , p.status  AS ${p.status}
+            , c.id      AS ${c.id}
+            , c.name    AS ${c.name}
+            FROM pet p
+            LEFT JOIN category c ON c.id = p.category_id
+            WHERE p.id >= :id
+            ORDER BY p.id
+            """;
+
+    return SqlQuery.run(connection.get(), query -> query
+            .sql(sql)
+            .label("p.id", MetaPet.id)
+            .label("p.name", MetaPet.name)
+            .label("p.status", MetaPet.status)
+            .label("c.id", MetaPet.category, MetaCategory.id)
+            .label("c.name", MetaPet.category, MetaCategory.name)
+            .bind("id", 1L)
+            .streamMap(PET_EM.mapper())
+            .toList());
+}
+```
+
 ---
 
 ## Tech Stack
