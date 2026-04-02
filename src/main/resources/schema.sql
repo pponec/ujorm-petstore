@@ -12,8 +12,8 @@ CREATE TABLE pet (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
     status VARCHAR(50) NOT NULL,
-    category_id BIGINT,
-    CONSTRAINT fk_pet_category FOREIGN KEY (category_id) REFERENCES category(id) ON DELETE SET NULL
+    category_id BIGINT NOT NULL,
+    CONSTRAINT fk_pet_category FOREIGN KEY (category_id) REFERENCES category(id)
 );
 
 CREATE TABLE pet_order (

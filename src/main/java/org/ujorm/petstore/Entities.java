@@ -14,6 +14,7 @@ public class Entities {
             Long id,
 
             /** The category name */
+            @Column(nullable = false)
             String name
     ) {}
 
@@ -25,6 +26,7 @@ public class Entities {
             Long id,
 
             /** The customer name */
+            @Column(nullable = false)
             String name
     ) {}
 
@@ -36,13 +38,15 @@ public class Entities {
             Long id,
 
             /** The pet name */
+            @Column(nullable = false)
             String name,
 
             /** The pet status */
+            @Column(nullable = false)
             Status status,
 
             /** The category */
-            @Column(name = "category_id")
+            @Column(name = "category_id", nullable = false)
             Category category
     ) {}
 
@@ -54,11 +58,11 @@ public class Entities {
             Long id,
 
             /** The customer */
-            @Column(name = "customer_id")
+            @Column(name = "customer_id", nullable = false)
             Customer customer,
 
             /** The ordered pet */
-            @Column(name = "pet_id")
+            @Column(name = "pet_id", nullable = false)
             Pet pet
     ) {}
 

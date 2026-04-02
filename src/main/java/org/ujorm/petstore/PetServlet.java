@@ -8,6 +8,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 import org.ujorm.petstore.Entities.Category;
@@ -45,11 +46,13 @@ public class PetServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
         var ctx = HttpContext.ofServlet(req, resp);
         var contextPath = req.getContextPath();
-        var action = ctx.parameter(ACTION, Action::paramValueOf);
+        var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
         var petId = ctx.parameter(PET_ID, Long::parseLong);
         var pets = services.getPets();
         var categories = services.getCategories();
-        var petToEdit = Action.EDIT.equals(action) ? services.getPetById(petId).orElse(null) : null;
+        var petToEdit = switch(action) {
+            case EDIT -> services.getPetById(petId);
+            default -> Optional.<Pet>empty(); };
 
         try (var html = HtmlElement.of(ctx, BOOTSTRAP_CSS)) {
             try (var body = html.addBody(Css.container, Css.mt5)) {
@@ -136,19 +139,20 @@ public class PetServlet extends HttpServlet {
     /**
      * Renders the form for adding or editing a pet
      * @param body The body element
-     * @param petToEdit The pet to edit, or null for a new pet
+     * @param petToEdit The pet to edit, or empty for a new pet
      * @param categories List of available categories
      */
-    private void renderForm(Element body, Pet petToEdit, List<Category> categories) {
-        body.addHeading(2, petToEdit == null ? "Add New Pet" : "Edit Pet", Css.mt5);
+    private void renderForm(Element body, Optional<Pet> petToEdit, List<Category> categories) {
+        body.addHeading(2, petToEdit.isPresent() ? "Edit Pet" : "Add New Pet", Css.mt5);
         try (var form = body.addForm().setMethod(Html.V_POST).setAction("?" + ACTION + "=" + Action.SAVE)) {
-            if (petToEdit != null) form.addHiddenInput(PET_ID, petToEdit.id());
+            petToEdit.ifPresent(pet -> form.addHiddenInput(PET_ID, pet.id()));
             try (var row = form.addDiv(Css.row, Css.g3)) {
                 try (var col = row.addDiv(Css.colMd4)) {
-                    col.addTextInput(Css.formControl).setNameValue(NAME, petToEdit != null ? petToEdit.name() : "").setAttr("placeholder", "Name");
+                    var petName = petToEdit.map(Pet::name).orElse("");
+                    col.addTextInput(Css.formControl).setNameValue(NAME, petName).setAttr("placeholder", "Name");
                 }
                 try (var col = row.addDiv(Css.colMd3)) {
-                    var selectValue = petToEdit != null ? petToEdit.status() : Status.AVAILABLE;
+                    var selectValue = petToEdit.map(Pet::status).orElse(Status.AVAILABLE);
                     var statuses = new EnumMap<Status, String>(Status.class);
                     for (var status : Status.values()) {
                         statuses.put(status, statusName(status));
@@ -159,7 +163,7 @@ public class PetServlet extends HttpServlet {
                     var select = col.addSelect(Css.formSelect).setName(CATEGORY_ID);
                     for (var cat : categories) {
                         var opt = select.addElement("option").setAttr("value", cat.id());
-                        if (petToEdit != null && petToEdit.category() != null && cat.id().equals(petToEdit.category().id())) {
+                        if (petToEdit.map(pet -> pet.category().id().equals(cat.id())).orElse(false)) {
                             opt.setAttr("selected", "selected");
                         }
                         opt.addText(cat.name());
