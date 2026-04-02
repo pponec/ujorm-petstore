@@ -35,8 +35,8 @@ The following example from a stateless servlet demonstrates how elegantly logic,
 
 ```java
 protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-    var ctx = HttpContext.ofServlet(req, resp);
     var contextPath = req.getContextPath();
+    var ctx = HttpContext.ofServlet(req, resp);
     var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
     var petId = ctx.parameter(PET_ID, Long::parseLong);
     var pets = services.getPets();
