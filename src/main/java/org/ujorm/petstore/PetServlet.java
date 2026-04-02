@@ -49,9 +49,7 @@ public class PetServlet extends HttpServlet {
         var petId = ctx.parameter(PET_ID, Long::parseLong);
         var pets = services.getPets();
         var categories = services.getCategories();
-        var petToEdit = (Action.EDIT.equals(action) && petId != null)
-                ? services.getPetById(petId).orElse(null)
-                : null;
+        var petToEdit = Action.EDIT.equals(action) ? services.getPetById(petId).orElse(null) : null;
 
         try (var html = HtmlElement.of(ctx, BOOTSTRAP_CSS)) {
             try (var body = html.addBody(Css.container, Css.mt5)) {

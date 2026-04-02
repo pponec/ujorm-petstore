@@ -47,9 +47,13 @@ public class AppPetStore {
             return dao.getCategory().findAll();
         }
 
-        /** Finds a specific pet */
-        public Optional<Pet> getPetById(Long id) {
-            return dao.getPet().findById(id);
+        /**
+         * Finds a specific pet.
+         * @param idNullable Optional identifier.
+         * @return The found pet wrapped in an Optional, or Optional.empty() if not found or the ID is null.
+         */
+        public Optional<Pet> getPetById(Long idNullable) {
+            return idNullable != null ? dao.getPet().findById(idNullable) : Optional.empty();
         }
 
         /** Gets the default customer */
