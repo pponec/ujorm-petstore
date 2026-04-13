@@ -39,12 +39,12 @@ public class AppPetStore {
 
         /** Gets all pets for display */
         public List<Pet> getPets() {
-            return dao.getPet().findAll();
+            return dao.getPet().findAll(0L);
         }
 
         /** Gets all categories for the form */
         public List<Category> getCategories() {
-            return dao.getCategory().findAll();
+            return dao.getCategory().findAll(0L);
         }
 
         /**

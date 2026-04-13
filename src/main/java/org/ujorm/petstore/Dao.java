@@ -1,25 +1,30 @@
 package org.ujorm.petstore;
 
-import java.sql.Connection;
-import java.util.List;
-import java.util.Optional;
-import java.util.function.Supplier;
 import org.springframework.stereotype.Repository;
-import org.ujorm.orm.SqlQuery;
 import org.ujorm.orm.core.EntityManager;
+import org.ujorm.orm.dsl.SelectQuery;
+import org.ujorm.orm.utils.EntityContext;
 import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Customer;
 import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
+import org.ujorm.petstore.meta.QCategory;
+import org.ujorm.petstore.meta.QPet;
+
+import java.sql.Connection;
+import java.util.List;
+import java.util.Optional;
+import java.util.function.Supplier;
 
 /** Data access wrapper for the PetStore */
 @Repository
 public class Dao {
 
-    private static final EntityManager<Pet, Long> PET_EM = EntityManager.of(Pet.class);
-    private static final EntityManager<Category, Long> CATEGORY_EM = EntityManager.of(Category.class);
-    private static final EntityManager<Customer, Long> CUSTOMER_EM = EntityManager.of(Customer.class);
-    private static final EntityManager<PetOrder, Long> ORDER_EM = EntityManager.of(PetOrder.class);
+    private static final EntityContext CTX = EntityContext.ofDefault();
+    private static final EntityManager<Pet, Long> PET_EM = CTX.entityManager(Pet.class);
+    private static final EntityManager<Category, Long> CATEGORY_EM = CTX.entityManager(Category.class);
+    private static final EntityManager<Customer, Long> CUSTOMER_EM = CTX.entityManager(Customer.class);
+    private static final EntityManager<PetOrder, Long> ORDER_EM = CTX.entityManager(PetOrder.class);
 
     /** Provider of the transaction-aware connection */
     private final Supplier<Connection> connection;
@@ -51,10 +56,11 @@ public class Dao {
     public class CategoryDao {
 
         /** Finds all categories */
-        public List<Category> findAll() {
-            return CATEGORY_EM.crud(connection.get())
-                    .selectWhere("", builder -> builder
-                    .streamMap(CATEGORY_EM.mapper())
+        public List<Category> findAll(long fromId) {
+            return SelectQuery.run(connection.get(), CATEGORY_EM, query -> query
+                    .columnsOfDomain(true)
+                    .where(QCategory.id.whereGe(fromId))
+                    .tail("ORDER BY", QCategory.id)
                     .toList());
         }
     }
@@ -72,28 +78,12 @@ public class Dao {
     public class PetDao {
 
         /** Finds all pets including their categories */
-        public List<Pet> findAll() {
-            var sql = """
-                    SELECT p.id AS ${p.id}
-                    , p.name    AS ${p.name}
-                    , p.status  AS ${p.status}
-                    , c.id      AS ${c.id}
-                    , c.name    AS ${c.name}
-                    FROM pet p
-                    LEFT JOIN category c ON c.id = p.category_id
-                    WHERE p.id >= :id
-                    ORDER BY p.id
-                    """;
-
-            return SqlQuery.run(connection.get(), query -> query
-                    .sql(sql)
-                    .label("p.id", MetaPet.id)
-                    .label("p.name", MetaPet.name)
-                    .label("p.status", MetaPet.status)
-                    .label("c.id", MetaPet.category, MetaCategory.id)
-                    .label("c.name", MetaPet.category, MetaCategory.name)
-                    .bind("id", 1L)
-                    .streamMap(PET_EM.mapper())
+        public List<Pet> findAll(long fromId) {
+            return SelectQuery.run(connection.get(), PET_EM, query -> query
+                    .columnsOfDomain(true)
+                    .column(QPet.category, QCategory.name)
+                    .where(QPet.id.whereGe(fromId))
+                    .tail("ORDER BY", QPet.id)
                     .toList());
         }
 
