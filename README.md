@@ -58,28 +58,12 @@ protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
 Here is what a native SQL query looks like in pure Java:
 
 ```java
-public List<Pet> findAll() {
-    var sql = """
-            SELECT p.id AS ${p.id}
-            , p.name    AS ${p.name}
-            , p.status  AS ${p.status}
-            , c.id      AS ${c.id}
-            , c.name    AS ${c.name}
-            FROM pet p
-            LEFT JOIN category c ON c.id = p.category_id
-            WHERE p.id >= :id
-            ORDER BY p.id
-            """;
-
-    return SqlQuery.run(connection.get(), query -> query
-            .sql(sql)
-            .label("p.id", MetaPet.id)
-            .label("p.name", MetaPet.name)
-            .label("p.status", MetaPet.status)
-            .label("c.id", MetaPet.category, MetaCategory.id)
-            .label("c.name", MetaPet.category, MetaCategory.name)
-            .bind("id", 1L)
-            .streamMap(PET_EM.mapper())
+public List<Pet> findAll(long fromId) {
+    return SelectQuery.run(connection.get(), PET_EM, query -> query
+            .columnsOfDomain(true)
+            .column(QPet.category, QCategory.name)
+            .where(QPet.id.whereGe(fromId))
+            .tail("ORDER BY", QPet.id)
             .toList());
 }
 ```
