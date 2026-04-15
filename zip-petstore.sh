@@ -9,7 +9,7 @@ FILE="$HOME/PetStore.zip"
 # Clean old archive
 rm -f "$FILE"
 
-# Pack project; include hidden files, exclude target folders
-zip -r "$FILE" . -x "**/target/*" "target/*"
+# Pack project; exclude VCS, IDE and build artifacts
+zip -r "$FILE" . -x ".git/*" ".idea/*" "**/target/*" "target/*"
 
 echo "Stored to $FILE"
