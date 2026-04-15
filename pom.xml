@@ -19,7 +19,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <ujorm.version>3.0.0-RC4</ujorm.version>
+        <ujorm.version>3.0.0-RC5</ujorm.version>
     </properties>
 
     <dependencies>

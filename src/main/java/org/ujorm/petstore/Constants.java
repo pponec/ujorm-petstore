@@ -27,6 +27,28 @@ public interface Constants {
         }
     }
 
+    /** User roles */
+    enum Role implements HttpParameter {
+        ADMIN,
+        CUSTOMER;
+
+        @Override
+        public String toString() {
+            return name().toLowerCase();
+        }
+    }
+
+    /** Common text constants */
+    final class Text {
+        static final String DEFAULT_USER = "test";
+        static final String DEFAULT_PASSWORD = "test";
+        static final String ADMIN_ROLE = "ADMIN";
+        static final String CUSTOMER_ROLE = "CUSTOMER";
+        static final String LOGGED_USER = "logged_user";
+        static final String ERR_DUPLICATE_LOGIN = "User with this login already exists.";
+        static final String ERR_INVALID_LOGIN = "Invalid login or password.";
+    }
+
     /** CSS constants */
     final class Css {
         static final String alignItemsCenter = "align-items-center";
@@ -62,5 +84,10 @@ public interface Constants {
         static final String tableHover = "table-hover";
         static final String textPrimary = "text-primary";
         static final String w100 = "w-100";
+        static final String vh100 = "vh-100";
+        static final String shadow = "shadow";
+        static final String p4 = "p-4";
+        static final String rounded = "rounded";
+        static final String formCheckInput = "formCheckInput";
     }
 }

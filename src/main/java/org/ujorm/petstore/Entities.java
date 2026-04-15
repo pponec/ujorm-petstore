@@ -2,6 +2,7 @@ package org.ujorm.petstore;
 
 import jakarta.persistence.*;
 import org.ujorm.petstore.Constants.Status;
+import org.ujorm.petstore.Constants.Role;
 
 /** Wrapper class for all domain entities */
 public class Entities {
@@ -66,4 +67,27 @@ public class Entities {
             Pet pet
     ) {}
 
+    /** User entity for authentication */
+    @Table(name = "user_account")
+    public record User(
+            /** The primary key */
+            @Id
+            Long id,
+
+            /** Login name */
+            @Column(nullable = false, unique = true)
+            String login,
+
+            /** Password hash */
+            @Column(nullable = false)
+            String password,
+
+            /** User role */
+            @Column(nullable = false)
+            Role role,
+
+            /** Is user active? */
+            @Column(nullable = false)
+            Boolean active
+    ) {}
 }

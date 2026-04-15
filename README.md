@@ -112,11 +112,7 @@ This "rebellious" architecture is ideal for developers seeking a simpler alterna
 
 ## Benchmarks & Resources
 
-For more technical details and performance metrics, please refer to:
-
-* [**Ujorm ORM Library**](https://github.com/pponec/ujorm/tree/ujorm3?tab=readme-ov-file#-ujorm3-library) – The official project page for the `ORM` module.
-* [**Ujorm Element Library**](https://github.com/pponec/ujorm/tree/ujorm3?tab=readme-ov-file#-ujorm3-library) – The official project page for the `UI` module.
-* [**Benchmark for Java ORM frameworks**](https://github.com/pponec/orm-benchmarks?tab=readme-ov-file#orm-benchmark) – Compare the performance of different `ORM` frameworks.
-* [**Benchmark for Java WEB frameworks**](https://github.com/pponec/html-benchmarks?tab=readme-ov-file#html-builder-benchmark) – Compare the performance of different `HTML` rendering engines.
-
----
+For more technical details and performance metrics, please visit:
+* [**Ujorm 3 Library**](https://github.com/pponec/ujorm/tree/ujorm3?tab=readme-ov-file#-ujorm3-library) – The official project page.
+* [**ORM Benchmark**](https://github.com/pponec/orm-benchmarks?tab=readme-ov-file#orm-benchmark) – Compare the performance of Ujorm ORM with other frameworks.
+* [**HTML Builder Benchmark**](https://github.com/pponec/html-benchmarks?tab=readme-ov-file#html-builder-benchmark) – See how the `ujo-web` module stands against other HTML rendering engines.

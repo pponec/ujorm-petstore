@@ -8,8 +8,10 @@ import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Customer;
 import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
+import org.ujorm.petstore.Entities.User;
 import org.ujorm.petstore.meta.QCategory;
 import org.ujorm.petstore.meta.QPet;
+import org.ujorm.petstore.meta.QUser;
 
 import java.sql.Connection;
 import java.util.List;
@@ -25,6 +27,7 @@ public class Dao {
     private static final EntityManager<Category, Long> CATEGORY_EM = CTX.entityManager(Category.class);
     private static final EntityManager<Customer, Long> CUSTOMER_EM = CTX.entityManager(Customer.class);
     private static final EntityManager<PetOrder, Long> ORDER_EM = CTX.entityManager(PetOrder.class);
+    private static final EntityManager<User, Long> USER_EM = CTX.entityManager(User.class);
 
     /** Provider of the transaction-aware connection */
     private final Supplier<Connection> connection;
@@ -34,6 +37,7 @@ public class Dao {
     private final CustomerDao customerDao = new CustomerDao();
     private final PetDao petDao = new PetDao();
     private final PetOrderDao orderDao = new PetOrderDao();
+    private final UserDao userDao = new UserDao();
 
     /** Creates a new Dao with the connection supplier */
     public Dao(Supplier<Connection> connection) {
@@ -52,13 +56,16 @@ public class Dao {
     /** Provides access to orders */
     public PetOrderDao getOrder() { return orderDao; }
 
+    /** Provides access to users */
+    public UserDao getUser() { return userDao; }
+
     /** Data access object for categories */
     public class CategoryDao {
 
         /** Finds all categories */
         public List<Category> findAll(long fromId) {
             return SelectQuery.run(connection.get(), CATEGORY_EM, query -> query
-                    .columnsOfDomain(true)
+                    .columns(true)
                     .where(QCategory.id.whereGe(fromId))
                     .tail("ORDER BY", QCategory.id)
                     .toList());
@@ -80,7 +87,7 @@ public class Dao {
         /** Finds all pets including their categories */
         public List<Pet> findAll(long fromId) {
             return SelectQuery.run(connection.get(), PET_EM, query -> query
-                    .columnsOfDomain(true)
+                    .columns(true)
                     .column(QPet.category, QCategory.name)
                     .where(QPet.id.whereGe(fromId))
                     .tail("ORDER BY", QPet.id)
@@ -114,6 +121,41 @@ public class Dao {
         /** Inserts a new order */
         public PetOrder insert(PetOrder order) {
             return ORDER_EM.crud(connection.get()).insert(order);
+        }
+    }
+
+    /** Data access object for users */
+    public class UserDao {
+
+        /** Finds user by login */
+        public Optional<User> findByLogin(String login) {
+            return SelectQuery.run(connection.get(), USER_EM, query -> query
+                    .columns(true)
+                    .where(QUser.login.whereEq(login))
+                    .findFirst());
+        }
+
+        /** Finds user by ID */
+        public Optional<User> findById(Long id) {
+            return USER_EM.crud(connection.get()).findById(id);
+        }
+
+        /** Finds all users */
+        public List<User> findAll() {
+            return SelectQuery.run(connection.get(), USER_EM, query -> query
+                    .columns(true)
+                    .tail("ORDER BY", QUser.login)
+                    .toList());
+        }
+
+        /** Inserts a new user */
+        public User insert(User user) {
+            return USER_EM.crud(connection.get()).insert(user);
+        }
+
+        /** Updates an existing user */
+        public void update(User user) {
+            USER_EM.crud(connection.get()).update(user);
         }
     }
 }

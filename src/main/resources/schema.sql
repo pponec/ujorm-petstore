@@ -8,6 +8,14 @@ CREATE TABLE customer (
     name VARCHAR(100) NOT NULL
 );
 
+CREATE TABLE user_account (
+    id BIGINT AUTO_INCREMENT PRIMARY KEY,
+    login VARCHAR(50) NOT NULL UNIQUE,
+    password VARCHAR(255) NOT NULL,
+    role VARCHAR(20) NOT NULL,
+    active BOOLEAN NOT NULL DEFAULT TRUE
+);
+
 CREATE TABLE pet (
     id BIGINT AUTO_INCREMENT PRIMARY KEY,
     name VARCHAR(100) NOT NULL,
@@ -27,6 +35,9 @@ CREATE TABLE pet_order (
 -- Default test data
 INSERT INTO category (name) VALUES ('Dogs'), ('Cats'), ('Birds');
 INSERT INTO customer (id, name) VALUES (1, 'John Doe');
+
+-- Default users (test/test) 
+-- Handled by Java DataInitializer on startup
 
 INSERT INTO pet (name, status, category_id) VALUES
     ('Rex', 'AVAILABLE', 1),
