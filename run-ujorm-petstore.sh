@@ -9,15 +9,15 @@ echo "Compiling Ujorm PetStore using Maven Wrapper..."
 echo "Compilation successful."
 echo ""
 echo "====================================================="
-echo "Starting the application..."
-echo "Once Spring Boot finishes initialization,"
+echo "Starting the application via Jetty Maven Plugin..."
+echo "Once Jetty finishes initialization,"
 echo "the PetStore will be available at:"
 echo ""
-echo "   http://localhost:8080/"
+echo "   http://localhost:3000/"
 echo ""
 echo "====================================================="
 echo "Press Ctrl+C to stop the application."
 echo ""
 
-# Run the Spring Boot application
-./mvnw spring-boot:run
+# Run the application using the Jetty plugin
+./mvnw jetty:run

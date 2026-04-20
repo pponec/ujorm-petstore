@@ -1,57 +1,44 @@
 package org.ujorm.petstore;
 
-import jakarta.servlet.ServletException;
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import java.io.IOException;
-import java.util.EnumMap;
-import java.util.List;
-import java.util.Optional;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.web.context.support.SpringBeanAutowiringSupport;
+import org.ujorm.petstore.Constants.Css;
+import org.ujorm.petstore.Constants.Status;
 import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Pet;
+import org.ujorm.petstore.utilities.AbstractServlet;
 import org.ujorm.tools.web.Element;
 import org.ujorm.tools.web.Html;
 import org.ujorm.tools.web.HtmlElement;
 import org.ujorm.tools.web.ao.HttpParameter;
 import org.ujorm.tools.web.request.HttpContext;
-import org.ujorm.petstore.Constants.Css;
-import org.ujorm.petstore.Constants.Status;
+
+import java.io.IOException;
+import java.util.EnumMap;
+import java.util.List;
+import java.util.Optional;
 
 import static org.ujorm.petstore.PetServlet.Attrib.*;
 
 /** Web presentation layer for PetStore */
-@WebServlet(urlPatterns = "")
-public class PetServlet extends HttpServlet {
+@WebServlet(urlPatterns = "", loadOnStartup = 1)
+public class PetServlet extends AbstractServlet {
 
     /** CSS link */
     static final String BOOTSTRAP_CSS = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
 
-    /** Injected business logic and data access */
-    @Autowired
-    private AppPetStore.Services services;
-
-    /** Initializes the servlet and enables Spring dependency injection */
-    @Override
-    public void init() throws ServletException {
-        super.init();
-        SpringBeanAutowiringSupport.processInjectionBasedOnServletContext(this, getServletContext());
-    }
-
     /** Handles GET requests to display the UI */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        var contextPath = req.getContextPath();
+        var contextPath = contextPathSlash(req);
         var ctx = HttpContext.ofServlet(req, resp);
         var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
         var petId = ctx.parameter(PET_ID, Long::parseLong);
-        var pets = services.getPets();
-        var categories = services.getCategories();
+        var pets = services().getPets();
+        var categories = services().getCategories();
         var petToEdit = switch(action) {
-            case EDIT -> services.getPetById(petId);
+            case EDIT -> services().getPetById(petId);
             default -> Optional.<Pet>empty(); };
 
         try (var html = HtmlElement.of(ctx, BOOTSTRAP_CSS)) {
@@ -69,13 +56,13 @@ public class PetServlet extends HttpServlet {
         var ctx = HttpContext.ofServlet(req, resp);
         var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
         var petId = ctx.parameter(PET_ID, Long::parseLong);
-        var resultUrl = req.getContextPath() + "/";
+        var resultUrl = contextPathSlash(req);
 
         switch (action) {
-            case BUY -> services.buyPet(petId);
-            case DELETE -> services.deletePet(petId);
+            case BUY -> services().buyPet(petId);
+            case DELETE -> services().deletePet(petId);
             case EDIT -> resultUrl += "?" + ACTION + "=" + Action.EDIT + "&" + PET_ID + "=" + petId;
-            case SAVE -> services.savePet(petId,
+            case SAVE -> services().savePet(petId,
                     ctx.parameter(NAME, ""),
                     ctx.parameter(STATUS, s -> Status.valueOf(s.toUpperCase())),
                     ctx.parameter(CATEGORY_ID, Long::parseLong));
@@ -98,8 +85,8 @@ public class PetServlet extends HttpServlet {
                 Css.borderBottom,
                 Css.pb3)) {
             header.addHeading(1, "Ujorm PetStore", Css.textPrimary);
-            header.addAnchor(contextPath + "/")
-                    .addImage(contextPath + "/images/ujorm3-logo.png", "Ujorm Logo")
+            header.addAnchor(contextPath)
+                    .addImage(contextPath + "images/ujorm3-logo-mini.jpg", "Ujorm Logo")
                     .setAttr("width", 150).setAttr("height", 150);
         }
     }
@@ -193,7 +180,7 @@ public class PetServlet extends HttpServlet {
     }
 
     /** Returns a label for the status */
-    String statusName(Status status) {
+    public static String statusName(Status status) {
         return switch (status) {
             case AVAILABLE -> "Available";
             case PENDING -> "Pending";
@@ -202,7 +189,7 @@ public class PetServlet extends HttpServlet {
     }
 
     /** Returns CSS class for the status badge */
-    String statusCss(Status status) {
+    public static String statusCss(Status status) {
         return switch (status) {
             case AVAILABLE -> Css.bgSuccess;
             case PENDING -> Css.bgWarning;
