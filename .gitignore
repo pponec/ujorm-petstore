@@ -23,5 +23,11 @@
 hs_err_pid*
 replay_pid*
 /target/*
-/target/**/
+
+# Python:
+# 
+/.idea/*
+/__pycache__/*
+/petstore.db
+
 
