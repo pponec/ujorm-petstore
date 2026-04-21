@@ -16,4 +16,6 @@ coverage/
 *.tar.gz
 *.rar
 
-target/*
+/target/*
+/.idea/*
+
