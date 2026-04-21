@@ -86,7 +86,7 @@ public class PetServlet extends AbstractServlet {
                 Css.pb3)) {
             header.addHeading(1, "Ujorm PetStore", Css.textPrimary);
             header.addAnchor(contextPath)
-                    .addImage(contextPath + "images/ujorm3-logo-mini.jpg", "Ujorm Logo")
+                    .addImage(contextPath + Constants.IMG_LOGO, "Ujorm Logo")
                     .setAttr("width", 150).setAttr("height", 150);
         }
     }

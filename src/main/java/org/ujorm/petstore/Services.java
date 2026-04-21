@@ -5,81 +5,77 @@ import jakarta.inject.Singleton;
 import java.util.List;
 import java.util.Optional;
 
+import org.ujorm.orm.core.EntityManager;
+import org.ujorm.orm.dsl.SelectQuery;
+import org.ujorm.orm.utils.EntityContext;
 import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Customer;
 import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
+import org.ujorm.petstore.meta.QCategory;
+import org.ujorm.petstore.meta.QPet;
 import org.ujorm.petstore.utilities.TransactionManager;
 import org.ujorm.tools.Check;
 import org.ujorm.petstore.Constants.Status;
 
 /**
- * Main Avaje Application and Service wrapper.
- * This class orchestrates business logic using a DAO facade and transaction management.
+ * PetStore Service handling both business logic and data access.
  */
 @Singleton
 public class Services {
 
-    /** Unified access to data objects */
-    private final DaoFactory.DaoFacade dao;
+    private static final EntityContext CTX = EntityContext.ofDefault();
+    private static final EntityManager<Pet, Long> PET_EM = CTX.entityManager(Pet.class);
+    private static final EntityManager<Category, Long> CATEGORY_EM = CTX.entityManager(Category.class);
+    private static final EntityManager<Customer, Long> CUSTOMER_EM = CTX.entityManager(Customer.class);
+    private static final EntityManager<PetOrder, Long> ORDER_EM = CTX.entityManager(PetOrder.class);
 
     /** Manager for handling database transactions */
     private final TransactionManager tm;
 
     @Inject
-    public Services(DaoFactory.DaoFacade dao, TransactionManager tm) {
-        this.dao = dao;
+    public Services(TransactionManager tm) {
         this.tm = tm;
     }
 
-    /**
-     * Gets all pets for display.
-     * @return List of all pets in the store.
-     */
+    /** Gets all pets including their categories. */
     public List<Pet> getPets() {
-        return tm.run(() -> dao.pet().findAll(0L));
+        return tm.run(() -> SelectQuery.run(tm.getConnection(), PET_EM, query -> query
+                .columns(true)
+                .column(QPet.category, QCategory.name)
+                .tail("ORDER BY", QPet.id)
+                .toList()));
     }
 
-    /**
-     * Gets all categories for the form.
-     * @return List of all pet categories.
-     */
+    /** Gets all categories. */
     public List<Category> getCategories() {
-        return tm.run(() -> dao.category().findAll(0L));
+        return tm.run(() -> SelectQuery.run(tm.getConnection(), CATEGORY_EM, query -> query
+                .columns(true)
+                .tail("ORDER BY", QCategory.id)
+                .toList()));
     }
 
-    /**
-     * Finds a specific pet by its identifier.
-     * @param idNullable Optional identifier.
-     * @return The found pet wrapped in an Optional, or Optional.empty() if not found or the ID is null.
-     */
+    /** Finds a specific pet by its identifier. */
     public Optional<Pet> getPetById(Long idNullable) {
         return idNullable != null
-                ? tm.run(() -> dao.pet().findById(idNullable))
+                ? tm.run(() -> PET_EM.crud(tm.getConnection()).findById(idNullable))
                 : Optional.empty();
     }
 
-    /**
-     * Gets the default customer for the pet store.
-     * @return The default customer instance.
-     * @throws IllegalStateException if the default customer is missing in the database.
-     */
+    /** Gets the default customer. */
     public Customer getCurrentCustomer() {
-        return dao.customer().findById(1L).orElseThrow(() ->
-                new IllegalStateException("Default customer is missing."));
+        return tm.run(() -> CUSTOMER_EM.crud(tm.getConnection()).findById(1L).orElseThrow(() ->
+                new IllegalStateException("Default customer is missing.")));
     }
 
-    /**
-     * Processes a pet purchase transaction.
-     * @param petId Optional pet identifier.
-     * @return The created order if successful, or null if petId was null.
-     */
+    /** Processes a pet purchase transaction. */
     public PetOrder buyPet(Long petId) {
         if (petId == null) {
             return null;
         }
         return tm.run(() -> {
-            var pet = dao.pet().findById(petId).orElseThrow(() ->
+            var conn = tm.getConnection();
+            var pet = PET_EM.crud(conn).findById(petId).orElseThrow(() ->
                     new IllegalStateException("Pet not found."));
 
             if (!Status.AVAILABLE.equals(pet.status())) {
@@ -87,44 +83,28 @@ public class Services {
             }
 
             var soldPet = new Pet(pet.id(), pet.name(), Status.SOLD, pet.category());
-            dao.pet().update(soldPet);
+            PET_EM.crud(conn).update(soldPet);
 
-            return dao.order().insert(new PetOrder(null, getCurrentCustomer(), soldPet));
+            return ORDER_EM.crud(conn).insert(new PetOrder(null, getCurrentCustomer(), soldPet));
         });
     }
 
-    /**
-     * Saves a new pet or updates an existing one.
-     * @param id Optional identifier (null for new pets).
-     * @param name Name of the pet.
-     * @param status Current status.
-     * @param categoryId Identifier of the assigned category.
-     */
+    /** Saves a new pet or updates an existing one. */
     public void savePet(Long id, String name, Status status, Long categoryId) {
         tm.run(() -> {
+            var conn = tm.getConnection();
             var extName = Check.isEmpty(name) ? "?" : name;
-            var category = getCategories().stream()
-                    .filter(c -> c.id().equals(categoryId))
-                    .findFirst()
-                    .orElseThrow();
-
-            if (id != null) {
-                dao.pet().update(new Pet(id, extName, status, category));
-            } else {
-                dao.pet().insert(new Pet(null, extName, status, category));
-            }
+            var category = CATEGORY_EM.crud(conn).findById(categoryId).orElseThrow();
+            var pet = new Pet(id, extName, status, category);
+            PET_EM.crud(conn).insertOrUpdate(pet);
         });
     }
 
-    /**
-     * Deletes a pet from the store.
-     * @param id Optional pet identifier.
-     */
+    /** Deletes a pet from the store. */
     public void deletePet(Long id) {
         if (id != null) {
             tm.run(() -> {
-                var pet = dao.pet().findById(id).orElseThrow();
-                dao.pet().delete(pet);
+                PET_EM.crud(tm.getConnection()).deleteById(id);
             });
         }
     }

@@ -5,6 +5,8 @@ import org.ujorm.tools.web.ao.HttpParameter;
 /** Common constants */
 public interface Constants {
 
+    String IMG_LOGO = "images/ujorm3-logo-mini.png";
+
     /** Pet statuses */
     enum Status implements HttpParameter {
         AVAILABLE,
