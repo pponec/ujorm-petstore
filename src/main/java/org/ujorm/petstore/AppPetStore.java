@@ -18,6 +18,7 @@ import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
 import org.ujorm.tools.Check;
 import org.ujorm.petstore.Constants.Status;
+import org.ujorm.petstore.Dao.*;
 
 /** Main Spring Boot Application and Service wrapper */
 @SpringBootApplication
@@ -29,22 +30,29 @@ public class AppPetStore {
     @Transactional
     public static class Services {
 
-        /** Data access component */
-        private final Dao dao;
+        /** Internal DAO instances */
+        private final CategoryDao categoryDao;
+        private final CustomerDao customerDao ;
+        private final PetDao petDao;
+        private final PetOrderDao orderDao ;
+
 
         /** Creates a new Services layer with injected DAO */
-        public Services(Dao dao) {
-            this.dao = dao;
+        public Services(CategoryDao categoryDao, CustomerDao customerDao, PetDao petDao, PetOrderDao orderDao) {
+            this.categoryDao = categoryDao;
+            this.customerDao = customerDao;
+            this.petDao = petDao;
+            this.orderDao = orderDao;
         }
 
         /** Gets all pets for display */
         public List<Pet> getPets() {
-            return dao.getPet().findAll(0L);
+            return petDao.findAll(0L);
         }
 
         /** Gets all categories for the form */
         public List<Category> getCategories() {
-            return dao.getCategory().findAll(0L);
+            return categoryDao.findAll(0L);
         }
 
         /**
@@ -53,12 +61,12 @@ public class AppPetStore {
          * @return The found pet wrapped in an Optional, or Optional.empty() if not found or the ID is null.
          */
         public Optional<Pet> getPetById(Long idNullable) {
-            return idNullable != null ? dao.getPet().findById(idNullable) : Optional.empty();
+            return idNullable != null ? petDao.findById(idNullable) : Optional.empty();
         }
 
         /** Gets the default customer */
         public Customer getCurrentCustomer() {
-            return dao.getCustomer().findById(1L).orElseThrow(() ->
+            return customerDao.findById(1L).orElseThrow(() ->
                     new IllegalStateException("Default customer is missing."));
         }
 
@@ -70,7 +78,7 @@ public class AppPetStore {
             if (petId == null) {
                 return null;
             }
-            var pet = dao.getPet().findById(petId).orElseThrow(() ->
+            var pet = petDao.findById(petId).orElseThrow(() ->
                     new IllegalStateException("Pet not found."));
 
             if (!Status.AVAILABLE.equals(pet.status())) {
@@ -78,9 +86,9 @@ public class AppPetStore {
             }
 
             var soldPet = new Pet(pet.id(), pet.name(), Status.SOLD, pet.category());
-            dao.getPet().update(soldPet);
+            petDao.update(soldPet);
 
-            return dao.getOrder().insert(new PetOrder(null, getCurrentCustomer(), soldPet));
+            return orderDao.insert(new PetOrder(null, getCurrentCustomer(), soldPet));
         }
 
         /** Saves or updates a pet */
@@ -90,9 +98,9 @@ public class AppPetStore {
                     .filter(c -> c.id().equals(categoryId)).findFirst().orElseThrow();
 
             if (id != null) {
-                dao.getPet().update(new Pet(id, extName, status, category));
+                petDao.update(new Pet(id, extName, status, category));
             } else {
-                dao.getPet().insert(new Pet(null, extName, status, category));
+                petDao.insert(new Pet(null, extName, status, category));
             }
         }
 
@@ -102,8 +110,7 @@ public class AppPetStore {
          */
         public void deletePet(Long id) {
             if (id != null) {
-                var pet = dao.getPet().findById(id).orElseThrow();
-                dao.getPet().delete(pet);
+                petDao.deleteById(id);
             }
         }
     }

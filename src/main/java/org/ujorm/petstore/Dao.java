@@ -10,6 +10,7 @@ import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
 import org.ujorm.petstore.meta.QCategory;
 import org.ujorm.petstore.meta.QPet;
+import org.ujorm.petstore.utils.AbstractDao;
 
 import java.sql.Connection;
 import java.util.List;
@@ -17,7 +18,6 @@ import java.util.Optional;
 import java.util.function.Supplier;
 
 /** Data access wrapper for the PetStore */
-@Repository
 public class Dao {
 
     private static final EntityContext CTX = EntityContext.ofDefault();
@@ -26,38 +26,17 @@ public class Dao {
     private static final EntityManager<Customer, Long> CUSTOMER_EM = CTX.entityManager(Customer.class);
     private static final EntityManager<PetOrder, Long> ORDER_EM = CTX.entityManager(PetOrder.class);
 
-    /** Provider of the transaction-aware connection */
-    private final Supplier<Connection> connection;
-
-    /** Internal DAO instances */
-    private final CategoryDao categoryDao = new CategoryDao();
-    private final CustomerDao customerDao = new CustomerDao();
-    private final PetDao petDao = new PetDao();
-    private final PetOrderDao orderDao = new PetOrderDao();
-
-    /** Creates a new Dao with the connection supplier */
-    public Dao(Supplier<Connection> connection) {
-        this.connection = connection;
-    }
-
-    /** Provides access to categories */
-    public CategoryDao getCategory() { return categoryDao; }
-
-    /** Provides access to customers */
-    public CustomerDao getCustomer() { return customerDao; }
-
-    /** Provides access to pets */
-    public PetDao getPet() { return petDao; }
-
-    /** Provides access to orders */
-    public PetOrderDao getOrder() { return orderDao; }
-
     /** Data access object for categories */
-    public class CategoryDao {
+    @Repository
+    public static class CategoryDao extends AbstractDao {
+
+        public CategoryDao(Supplier<Connection> connection) {
+            super(connection);
+        }
 
         /** Finds all categories */
         public List<Category> findAll(long fromId) {
-            return SelectQuery.run(connection.get(), CATEGORY_EM, query -> query
+            return SelectQuery.run(connection(), CATEGORY_EM, query -> query
                     .columnsOfDomain(true)
                     .where(QCategory.id.whereGe(fromId))
                     .tail("ORDER BY", QCategory.id)
@@ -66,20 +45,30 @@ public class Dao {
     }
 
     /** Data access object for customers */
-    public class CustomerDao {
+    @Repository
+    public static class CustomerDao extends AbstractDao {
+
+        public CustomerDao(Supplier<Connection> connection) {
+            super(connection);
+        }
 
         /** Finds customer by ID */
         public Optional<Customer> findById(Long id) {
-            return CUSTOMER_EM.crud(connection.get()).findById(id);
+            return CUSTOMER_EM.crud(connection()).findById(id);
         }
     }
 
     /** Data access object for pets */
-    public class PetDao {
+    @Repository
+    public static class PetDao extends AbstractDao {
+
+        public PetDao(Supplier<Connection> connection) {
+            super(connection);
+        }
 
         /** Finds all pets including their categories */
         public List<Pet> findAll(long fromId) {
-            return SelectQuery.run(connection.get(), PET_EM, query -> query
+            return SelectQuery.run(connection(), PET_EM, query -> query
                     .columnsOfDomain(true)
                     .column(QPet.category, QCategory.name)
                     .where(QPet.id.whereGe(fromId))
@@ -89,31 +78,36 @@ public class Dao {
 
         /** Finds pet by ID */
         public Optional<Pet> findById(Long id) {
-            return PET_EM.crud(connection.get()).findById(id);
+            return PET_EM.crud(connection()).findById(id);
         }
 
         /** Inserts a new pet */
         public Pet insert(Pet pet) {
-            return PET_EM.crud(connection.get()).insert(pet);
+            return PET_EM.crud(connection()).insert(pet);
         }
 
         /** Updates an existing pet */
         public void update(Pet pet) {
-            PET_EM.crud(connection.get()).update(pet);
+            PET_EM.crud(connection()).update(pet);
         }
 
         /** Deletes a pet */
-        public void delete(Pet pet) {
-            PET_EM.crud(connection.get()).delete(pet);
+        public void deleteById(Long petId) {
+            PET_EM.crud(connection()).deleteById(petId);
         }
     }
 
     /** Data access object for orders */
-    public class PetOrderDao {
+    @Repository
+    public static class PetOrderDao  extends AbstractDao {
+
+        public PetOrderDao(Supplier<Connection> connection) {
+            super(connection);
+        }
 
         /** Inserts a new order */
         public PetOrder insert(PetOrder order) {
-            return ORDER_EM.crud(connection.get()).insert(order);
+            return ORDER_EM.crud(connection()).insert(order);
         }
     }
 }

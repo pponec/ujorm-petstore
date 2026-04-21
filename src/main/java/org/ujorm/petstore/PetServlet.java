@@ -13,6 +13,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.context.support.SpringBeanAutowiringSupport;
 import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Pet;
+import org.ujorm.petstore.utils.AbstractServlet;
 import org.ujorm.tools.web.Element;
 import org.ujorm.tools.web.Html;
 import org.ujorm.tools.web.HtmlElement;
@@ -25,8 +26,7 @@ import static org.ujorm.petstore.PetServlet.Attrib.*;
 
 /** Web presentation layer for PetStore */
 @WebServlet(urlPatterns = "")
-public class PetServlet extends HttpServlet {
-
+public class PetServlet extends AbstractServlet {
     /** CSS link */
     static final String BOOTSTRAP_CSS = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
 
@@ -35,12 +35,6 @@ public class PetServlet extends HttpServlet {
     private AppPetStore.Services services;
 
     /** Initializes the servlet and enables Spring dependency injection */
-    @Override
-    public void init() throws ServletException {
-        super.init();
-        SpringBeanAutowiringSupport.processInjectionBasedOnServletContext(this, getServletContext());
-    }
-
     /** Handles GET requests to display the UI */
     @Override
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
