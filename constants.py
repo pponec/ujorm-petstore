@@ -1,0 +1,31 @@
+from enum import Enum
+
+class Status(str, Enum):
+    AVAILABLE = "available"
+    PENDING = "pending"
+    SOLD = "sold"
+
+class Css:
+    ALIGN_ITEMS_CENTER: str = "flex items-center"
+    BADGE: str = "px-2 py-1 rounded-full text-xs font-semibold"
+    BG_SECONDARY: str = "bg-gray-200 text-gray-800"
+    BG_SUCCESS: str = "bg-green-100 text-green-800"
+    BG_WARNING: str = "bg-yellow-100 text-yellow-800"
+    BORDER_BOTTOM: str = "border-b border-gray-200"
+    BTN: str = "px-4 py-2 rounded-md transition-colors font-medium text-sm"
+    BTN_OUTLINE_DANGER: str = "border border-red-500 text-red-500 hover:bg-red-50"
+    BTN_OUTLINE_PRIMARY: str = "border border-blue-500 text-blue-500 hover:bg-blue-50"
+    BTN_PRIMARY: str = "bg-blue-600 text-white hover:bg-blue-700"
+    BTN_SM: str = "px-2 py-1 text-xs"
+    BTN_SUCCESS: str = "bg-green-600 text-white hover:bg-green-700"
+    CONTAINER: str = "max-w-7xl mx-auto px-4 sm:px-6 lg:px-8"
+    D_FLEX: str = "flex"
+    D_INLINE: str = "inline-flex"
+    FORM_CONTROL: str = "w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+    FORM_SELECT: str = "w-full border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+    JUSTIFY_CONTENT_BETWEEN: str = "justify-between"
+    TABLE: str = "min-w-full divide-y divide-gray-200"
+    TABLE_DARK: str = "bg-gray-800 text-white"
+    TABLE_HOVER: str = "hover:bg-gray-50"
+    TEXT_PRIMARY: str = "text-blue-600"
+    W100: str = "w-full"

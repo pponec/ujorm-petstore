@@ -1,0 +1,6 @@
+{
+  "name": "Python PetStore",
+  "description": "Modern Python 3.12 port of the Ujorm PetStore demonstration, using FastAPI, SQLModel, and Airium for object-oriented HTML generation.",
+  "requestFramePermissions": [],
+  "majorCapabilities": []
+}
