@@ -1,6 +1,7 @@
 package org.ujorm.petstore.utilities;
 
 import io.avaje.inject.BeanScope;
+import jakarta.servlet.Filter;
 import jakarta.servlet.ServletContextEvent;
 import jakarta.servlet.ServletContextListener;
 import jakarta.servlet.annotation.WebListener;
@@ -9,6 +10,8 @@ import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
 import java.nio.charset.StandardCharsets;
+import java.util.EnumSet;
+import jakarta.servlet.DispatcherType;
 
 /** Initializes the Avaje BeanScope and Database Schema */
 @WebListener
@@ -21,8 +24,20 @@ public class Bootstrap implements ServletContextListener {
     public void contextInitialized(ServletContextEvent sce) {
         LOGGER.info("Initializing Ujorm PetStore with Avaje...");
         beanScope = BeanScope.builder().build();
+        registerFilter(TransactionFilter.class, sce);
         initSchema();
         LOGGER.info("Initialization complete.");
+    }
+
+    /** Registers a filter obtained from the DI scope */
+    private void registerFilter(Class<? extends Filter> filterClass, ServletContextEvent sce) {
+        var servletContext = sce.getServletContext();
+        var filterInstance = beanScope.get(filterClass);
+        var registration = servletContext.addFilter(filterClass.getSimpleName(), filterInstance);
+
+        if (registration != null) {
+            registration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
+        }
     }
 
     @Override

@@ -12,7 +12,7 @@ import javax.sql.DataSource;
 
 /** Database configuration for Avaje */
 @Factory
-public class JdbcConfig {
+public class JdbcProvider {
 
     /** Creates and configures the DataSource */
     @Bean
@@ -21,7 +21,7 @@ public class JdbcConfig {
         var config = new HikariConfig();
         config.setJdbcUrl("jdbc:h2:mem:petstore;DB_CLOSE_DELAY=-1;DB_CLOSE_ON_EXIT=FALSE");
         config.setUsername("sa");
-        config.setPassword("");
+        config.setPassword(""); // Change it
         config.setDriverClassName("org.h2.Driver");
         return new HikariDataSource(config);
     }

@@ -68,6 +68,13 @@
             <artifactId>ujo-web</artifactId>
             <version>${ujorm.version}</version>
         </dependency>
+
+        <!-- Logger -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-jdk14</artifactId>
+            <version>2.0.12</version>
+        </dependency>
     </dependencies>
 
     <build>
