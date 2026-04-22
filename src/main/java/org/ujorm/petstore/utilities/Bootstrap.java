@@ -11,6 +11,7 @@ import org.slf4j.LoggerFactory;
 import javax.sql.DataSource;
 import java.util.EnumSet;
 import jakarta.servlet.DispatcherType;
+import org.ujorm.petstore.DatabaseInitializer;
 
 /** Initializes the Avaje BeanScope and Database Schema */
 @WebListener
@@ -50,7 +51,7 @@ public class Bootstrap implements ServletContextListener {
     private void initSchema() {
         var dataSource = beanScope.get(DataSource.class);
         try (var connection = dataSource.getConnection()) {
-            new InitDatabase().createTables(connection);
+            new DatabaseInitializer().createTables(connection);
             LOGGER.info("Database schema initialized successfully.");
         } catch (Exception e) {
             LOGGER.error("Failed to initialize database schema", e);
