@@ -65,4 +65,18 @@ public interface Constants {
         static final String textPrimary = "text-primary";
         static final String w100 = "w-100";
     }
+
+    /** UI messages */
+    final class Msg {
+        static final String TITLE_AVAILABLE_PETS = "Available Pets";
+        static final String TITLE_EDIT_PET = "Edit Pet";
+        static final String TITLE_ADD_PET = "Add New Pet";
+        static final String BUTTON_SAVE = "Save";
+        static final String BUTTON_BUY = "Buy";
+        static final String BUTTON_EDIT = "Edit";
+        static final String BUTTON_DELETE = "Delete";
+        static final String STATUS_AVAILABLE = "Available";
+        static final String STATUS_PENDING = "Pending";
+        static final String STATUS_SOLD = "Sold";
+    }
 }

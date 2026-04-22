@@ -4,6 +4,7 @@ import jakarta.servlet.annotation.WebServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.ujorm.petstore.Constants.Css;
+import org.ujorm.petstore.Constants.Msg;
 import org.ujorm.petstore.Constants.Status;
 import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Pet;
@@ -17,6 +18,7 @@ import org.ujorm.tools.web.request.HttpContext;
 import java.io.IOException;
 import java.util.EnumMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
 
 import static org.ujorm.petstore.PetServlet.Attrib.*;
@@ -27,6 +29,7 @@ public class PetServlet extends AbstractServlet {
 
     /** CSS link */
     static final String BOOTSTRAP_CSS = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
+    private static final Map<Status, String> STATUS_OPTIONS = createStatusOptions();
 
     /** Handles GET requests to display the UI */
     @Override
@@ -37,16 +40,10 @@ public class PetServlet extends AbstractServlet {
         var petId = ctx.parameter(PET_ID, Long::parseLong);
         var pets = services().getPets();
         var categories = services().getCategories();
-        var petToEdit = switch(action) {
-            case EDIT -> services().getPetById(petId);
-            default -> Optional.<Pet>empty(); };
+        var petToEdit = findPetToEdit(action, petId);
 
         try (var html = HtmlElement.of(ctx, BOOTSTRAP_CSS)) {
-            try (var body = html.addBody(Css.container, Css.mt5)) {
-                renderHeader(body, contextPath);
-                renderTable(body, pets);
-                renderForm(body, petToEdit, categories);
-            }
+            renderPage(html, contextPath, pets, petToEdit, categories);
         }
     }
 
@@ -56,19 +53,47 @@ public class PetServlet extends AbstractServlet {
         var ctx = HttpContext.ofServlet(req, resp);
         var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
         var petId = ctx.parameter(PET_ID, Long::parseLong);
-        var resultUrl = contextPathSlash(req);
+        var resultUrl = handlePostAction(req, ctx, action, petId);
+        resp.sendRedirect(resultUrl); // Prevents duplicate form submissions (PRG pattern)
+    }
 
+    private void renderPage(HtmlElement html, String contextPath, List<Pet> pets, Optional<Pet> petToEdit, List<Category> categories) {
+        try (var body = html.addBody(Css.container, Css.mt5)) {
+            renderHeader(body, contextPath);
+            renderTable(body, pets);
+            renderForm(body, petToEdit, categories);
+        }
+    }
+
+    private Optional<Pet> findPetToEdit(Action action, Long petId) {
+        return switch(action) {
+            case EDIT -> services().getPetById(petId);
+            default -> Optional.empty();
+        };
+    }
+
+    private String handlePostAction(HttpServletRequest req, HttpContext ctx, Action action, Long petId) {
+        var resultUrl = contextPathSlash(req);
         switch (action) {
             case BUY -> services().buyPet(petId);
             case DELETE -> services().deletePet(petId);
-            case EDIT -> resultUrl += "?" + ACTION + "=" + Action.EDIT + "&" + PET_ID + "=" + petId;
-            case SAVE -> services().savePet(petId,
-                    ctx.parameter(NAME, ""),
-                    ctx.parameter(STATUS, s -> Status.valueOf(s.toUpperCase())),
-                    ctx.parameter(CATEGORY_ID, Long::parseLong));
+            case EDIT -> resultUrl = buildEditUrl(resultUrl, petId);
+            case SAVE -> savePet(ctx, petId);
+            case UNKNOWN -> { }
         }
-        // Prevents duplicate form submissions (PRG pattern)
-        resp.sendRedirect(resultUrl);
+        return resultUrl;
+    }
+
+    private String buildEditUrl(String contextPath, Long petId) {
+        return contextPath + "?" + ACTION + "=" + Action.EDIT + "&" + PET_ID + "=" + petId;
+    }
+
+    private void savePet(HttpContext ctx, Long petId) {
+        services().savePet(
+                petId,
+                ctx.parameter(NAME, ""),
+                ctx.parameter(STATUS, s -> Status.valueOf(s.toUpperCase())),
+                ctx.parameter(CATEGORY_ID, Long::parseLong));
     }
 
     /**
@@ -97,7 +122,7 @@ public class PetServlet extends AbstractServlet {
      * @param pets List of pets to display
      */
     private void renderTable(Element body, List<Pet> pets) {
-        body.addHeading(2, "Available Pets", Css.mb3);
+        body.addHeading(2, Msg.TITLE_AVAILABLE_PETS, Css.mb3);
         try (var table = body.addTable(Css.table, Css.tableHover)) {
             try (var headRow = table.addTableHead(Css.tableDark).addTableRow()) {
                 headRow.addTableDetail().addText("ID");
@@ -108,19 +133,27 @@ public class PetServlet extends AbstractServlet {
             }
             try (var tbody = table.addTableBody()) {
                 for (var pet : pets) {
-                    try (var row = tbody.addTableRow()) {
-                        row.addTableDetail().addText(pet.id());
-                        row.addTableDetail().addText(pet.name());
-
-                        var statusCss = statusCss(pet.status());
-                        var statusName = statusName(pet.status());
-                        row.addTableDetail().addSpan(Css.badge, statusCss).addText(statusName);
-                        row.addTableDetail().addText(pet.category() != null ? pet.category().name() : "");
-                        buttonBar(pet, row.addTableDetail());
-                    }
+                    renderPetRow(tbody, pet);
                 }
             }
         }
+    }
+
+    private void renderPetRow(Element tbody, Pet pet) {
+        try (var row = tbody.addTableRow()) {
+            row.addTableDetail().addText(pet.id());
+            row.addTableDetail().addText(pet.name());
+
+            var statusCss = statusCss(pet.status());
+            var statusName = statusName(pet.status());
+            row.addTableDetail().addSpan(Css.badge, statusCss).addText(statusName);
+            row.addTableDetail().addText(categoryName(pet));
+            buttonBar(pet, row.addTableDetail());
+        }
+    }
+
+    private String categoryName(Pet pet) {
+        return pet.category() != null ? pet.category().name() : "";
     }
 
     /**
@@ -130,7 +163,7 @@ public class PetServlet extends AbstractServlet {
      * @param categories List of available categories
      */
     private void renderForm(Element body, Optional<Pet> petToEdit, List<Category> categories) {
-        body.addHeading(2, petToEdit.isPresent() ? "Edit Pet" : "Add New Pet", Css.mt5);
+        body.addHeading(2, petToEdit.isPresent() ? Msg.TITLE_EDIT_PET : Msg.TITLE_ADD_PET, Css.mt5);
         try (var form = body.addForm().setMethod(Html.V_POST).setAction("?" + ACTION + "=" + Action.SAVE)) {
             petToEdit.ifPresent(pet -> form.addHiddenInput(PET_ID, pet.id()));
             try (var row = form.addDiv(Css.row, Css.g3)) {
@@ -140,25 +173,29 @@ public class PetServlet extends AbstractServlet {
                 }
                 try (var col = row.addDiv(Css.colMd3)) {
                     var selectValue = petToEdit.map(Pet::status).orElse(Status.AVAILABLE);
-                    var statuses = new EnumMap<Status, String>(Status.class);
-                    for (var status : Status.values()) {
-                        statuses.put(status, statusName(status));
-                    }
-                    col.addSelect(Css.formSelect).setName(STATUS).addSelectOptions(selectValue, statuses);
+                    col.addSelect(Css.formSelect).setName(STATUS).addSelectOptions(selectValue, STATUS_OPTIONS);
                 }
                 try (var col = row.addDiv(Css.colMd3)) {
                     var select = col.addSelect(Css.formSelect).setName(CATEGORY_ID);
                     for (var cat : categories) {
                         var opt = select.addElement("option").setAttr("value", cat.id());
-                        if (petToEdit.map(pet -> pet.category().id().equals(cat.id())).orElse(false)) {
+                        if (isSelectedCategory(petToEdit, cat)) {
                             opt.setAttr("selected", "selected");
                         }
                         opt.addText(cat.name());
                     }
                 }
-                row.addDiv(Css.colMd2).addSubmitButton(Css.btn, Css.btnPrimary, Css.w100).addText("Save");
+                row.addDiv(Css.colMd2).addSubmitButton(Css.btn, Css.btnPrimary, Css.w100).addText(Msg.BUTTON_SAVE);
             }
         }
+    }
+
+    private boolean isSelectedCategory(Optional<Pet> petToEdit, Category category) {
+        return petToEdit
+                .map(Pet::category)
+                .map(Category::id)
+                .map(categoryId -> categoryId.equals(category.id()))
+                .orElse(false);
     }
 
     /** Renders action buttons with a hidden ID and standard action name */
@@ -169,22 +206,30 @@ public class PetServlet extends AbstractServlet {
             form.addSubmitButton(Css.btn, Css.btnSm, Css.btnSuccess)
                     .setNameValue(ACTION, Action.BUY)
                     .setAttr(available ? null : "disabled", "disabled")
-                    .addText("Buy");
+                    .addText(Msg.BUTTON_BUY);
             form.addSubmitButton(Css.btn, Css.btnSm, Css.btnOutlinePrimary, Css.ms1)
                     .setNameValue(ACTION, Action.EDIT)
-                    .addText("Edit");
+                    .addText(Msg.BUTTON_EDIT);
             form.addSubmitButton(Css.btn, Css.btnSm, Css.btnOutlineDanger, Css.ms1)
                     .setNameValue(ACTION, Action.DELETE)
-                    .addText("Delete");
+                    .addText(Msg.BUTTON_DELETE);
         }
+    }
+
+    private static Map<Status, String> createStatusOptions() {
+        var statuses = new EnumMap<Status, String>(Status.class);
+        for (var status : Status.values()) {
+            statuses.put(status, statusName(status));
+        }
+        return statuses;
     }
 
     /** Returns a label for the status */
     public static String statusName(Status status) {
         return switch (status) {
-            case AVAILABLE -> "Available";
-            case PENDING -> "Pending";
-            default -> "Sold";
+            case AVAILABLE -> Msg.STATUS_AVAILABLE;
+            case PENDING -> Msg.STATUS_PENDING;
+            default -> Msg.STATUS_SOLD;
         };
     }
 
