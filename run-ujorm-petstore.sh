@@ -2,6 +2,7 @@
 
 # Exit immediately if a command exits with a non-zero status
 set -e
+cd "$(dirname "$0")"
 
 echo "Compiling Ujorm PetStore using Maven Wrapper..."
 ./mvnw clean compile
@@ -18,6 +19,9 @@ echo ""
 echo "====================================================="
 echo "Press Ctrl+C to stop the application."
 echo ""
+
+# Run database PostgreSql
+./run-database.sh
 
 # Run the application using the Jetty plugin
 ./mvnw jetty:run

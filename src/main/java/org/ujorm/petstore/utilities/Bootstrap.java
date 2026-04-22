@@ -9,7 +9,6 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import javax.sql.DataSource;
-import java.nio.charset.StandardCharsets;
 import java.util.EnumSet;
 import jakarta.servlet.DispatcherType;
 
@@ -47,24 +46,11 @@ public class Bootstrap implements ServletContextListener {
         }
     }
 
-    /** Initializes the database schema using the schema.sql file */
+    /** Initializes the database schema using the InitDatabase class */
     private void initSchema() {
         var dataSource = beanScope.get(DataSource.class);
-        try (var connection = dataSource.getConnection();
-             var is = getClass().getResourceAsStream("/schema.sql")) {
-
-            if (is == null) {
-                throw new IllegalStateException("schema.sql not found in classpath");
-            }
-
-            var sql = new String(is.readAllBytes(), StandardCharsets.UTF_8);
-            for (var statement : sql.split(";")) {
-                if (!statement.trim().isEmpty()) {
-                    try (var stmt = connection.createStatement()) {
-                        stmt.execute(statement);
-                    }
-                }
-            }
+        try (var connection = dataSource.getConnection()) {
+            new InitDatabase().createTables(connection);
             LOGGER.info("Database schema initialized successfully.");
         } catch (Exception e) {
             LOGGER.error("Failed to initialize database schema", e);
