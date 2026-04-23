@@ -122,6 +122,9 @@
                     </httpConnector>
                     <webApp>
                         <contextPath>/</contextPath>
+                        <resourceBases>
+                            <resourceBase>${project.basedir}/src/main/resources/META-INF/resources</resourceBase>
+                        </resourceBases>
                     </webApp>
                 </configuration>
                 <!--

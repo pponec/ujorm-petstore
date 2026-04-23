@@ -33,8 +33,7 @@ public class PetServlet extends AbstractServlet {
 
     /** Handles GET requests to display the UI */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        var ctx = ExchangeContext.of(req, resp);
+    protected void doGet(ExchangeContext ctx) {
         var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
         var petId = ctx.parameter(PET_ID, Long::parseLong);
         var pets = services().getPets();
@@ -48,12 +47,11 @@ public class PetServlet extends AbstractServlet {
 
     /** Handles POST requests to modify data using a standardized action detection */
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        var ctx = ExchangeContext.of(req, resp);
+    protected void doPost(ExchangeContext ctx) throws IOException {
         var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
         var petId = ctx.parameter(PET_ID, Long::parseLong);
         var resultUrl = handlePostAction(action, petId, ctx);
-        resp.sendRedirect(resultUrl); // Prevents duplicate form submissions (PRG pattern)
+        ctx.sendRedirect(resultUrl); // Prevents duplicate form submissions (PRG pattern)
     }
 
     private void renderPage(HtmlElement html, List<Pet> pets, Optional<Pet> petToEdit, List<Category> categories, ExchangeContext ctx) {
