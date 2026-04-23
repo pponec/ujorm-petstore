@@ -42,6 +42,12 @@ image_exists() {
   docker images -q "$IMAGE_NAME" | grep -q .
 }
 
+# Check if Docker is installed, running, and accessible by the current user
+if ! docker info >/dev/null 2>&1; then
+    echo "Error: Docker is either not installed, not running, or the current user lacks permissions." >&2
+    exit 1
+fi
+
 case "$1" in
   stop)
     echo "Stopping container $CONTAINER_NAME..."
