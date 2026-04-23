@@ -12,11 +12,10 @@
     <description>Ujorm3 PetStore Demonstration on Avaje</description>
 
     <properties>
-        <java.version>21</java.version>
+        <java.version>25</java.version>
         <ujorm.version>3.0.0-RC5</ujorm.version>
         <avaje.inject.version>10.4</avaje.inject.version>
-        <avaje.http.version>3.1</avaje.http.version>
-        <jetty.version>11.0.24</jetty.version>
+        <jetty.version>12.1.8</jetty.version>
         <postgresql.version>42.7.3</postgresql.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
     </properties>
@@ -39,6 +38,7 @@
             <artifactId>HikariCP</artifactId>
             <version>6.2.1</version>
         </dependency>
+
         <dependency>
             <groupId>jakarta.persistence</groupId>
             <artifactId>jakarta.persistence-api</artifactId>
@@ -112,19 +112,16 @@
             </plugin>
 
             <plugin>
-                <groupId>org.eclipse.jetty</groupId>
-                <artifactId>jetty-maven-plugin</artifactId>
+                <groupId>org.eclipse.jetty.ee10</groupId>
+                <artifactId>jetty-ee10-maven-plugin</artifactId>
                 <version>${jetty.version}</version>
                 <configuration>
-                    <scan>0</scan>
+                    <scan>1</scan>
                     <httpConnector>
                         <port>8080</port>
                     </httpConnector>
                     <webApp>
                         <contextPath>/</contextPath>
-                        <resourceBases>
-                            <resourceBase>${project.basedir}/src/main/resources/META-INF/resources</resourceBase>
-                        </resourceBases>
                     </webApp>
                 </configuration>
             </plugin>
