@@ -1,5 +1,6 @@
 package org.ujorm.petstore;
 
+import jakarta.inject.Singleton;
 import jakarta.servlet.annotation.WebServlet;
 import org.ujorm.petstore.Constants.Css;
 import org.ujorm.petstore.Constants.Msg;
@@ -7,6 +8,7 @@ import org.ujorm.petstore.Constants.Status;
 import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.utilities.AbstractServlet;
+import org.ujorm.petstore.utilities.WebRoute;
 import org.ujorm.tools.web.Element;
 import org.ujorm.tools.web.Html;
 import org.ujorm.tools.web.HtmlElement;
@@ -22,7 +24,8 @@ import java.util.Optional;
 import static org.ujorm.petstore.PetServlet.Attrib.*;
 
 /** Web presentation layer for PetStore */
-@WebServlet(urlPatterns = "", loadOnStartup = 1)
+@WebRoute("")
+@Singleton
 public class PetServlet extends AbstractServlet {
 
     /** CSS link */

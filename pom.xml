@@ -8,8 +8,9 @@
     <artifactId>ujorm-petstore</artifactId>
     <version>1.0.0-SNAPSHOT</version>
     <packaging>war</packaging>
+
     <name>UjormPetstore</name>
-    <description>Ujorm3 PetStore Demonstration on Avaje</description>
+    <description>Ujorm3 PetStore Demonstration on Avaje and Jetty 12</description>
 
     <properties>
         <java.version>25</java.version>
@@ -20,6 +21,20 @@
     </properties>
 
     <dependencies>
+
+        <!-- Jetty -->
+
+        <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-servlet</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-webapp</artifactId>
+            <version>${jetty.version}</version>
+        </dependency>
+
         <!-- Avaje Inject -->
         <dependency>
             <groupId>io.avaje</groupId>
@@ -69,11 +84,18 @@
             <version>${ujorm.version}</version>
         </dependency>
 
-        <!-- Logger -->
+        <!-- Utilities -->
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
             <version>2.0.12</version>
+        </dependency>
+
+        <dependency>
+            <groupId>org.jetbrains</groupId>
+            <artifactId>annotations</artifactId>
+            <version>24.1.0</version>
+            <scope>provided</scope>
         </dependency>
     </dependencies>
 
@@ -105,7 +127,6 @@
                 </configuration>
             </plugin>
 
-            <!-- WAR Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-war-plugin</artifactId>
@@ -115,13 +136,12 @@
                 </configuration>
             </plugin>
 
-            <!-- Jetty Plugin -->
             <plugin>
                 <groupId>org.eclipse.jetty.ee10</groupId>
                 <artifactId>jetty-ee10-maven-plugin</artifactId>
                 <version>${jetty.version}</version>
                 <configuration>
-                    <scan>1</scan>
+                    <scan>0</scan>
                     <httpConnector>
                         <port>8080</port>
                     </httpConnector>
@@ -132,12 +152,6 @@
                         </resourceBases>
                     </webApp>
                 </configuration>
-                <!--
-                Ujorm dependencies are required in the plugin classpath because Jetty 12
-                isolates the webapp classloader. Ujorm's runtime class generator
-                (using javax.tools.JavaCompiler) needs these libraries available
-                to the compiler's classpath to generate internal metadata classes.
-                -->
                 <dependencies>
                     <dependency>
                         <groupId>org.ujorm</groupId>
@@ -153,4 +167,24 @@
             </plugin>
         </plugins>
     </build>
+
+    <!-- Profile building the Tomcat: -->
+    <profiles>
+        <profile>
+            <id>tomcat</id>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-war-plugin</artifactId>
+                        <version>3.4.0</version>
+                        <configuration>
+                            <failOnMissingWebXml>false</failOnMissingWebXml>
+                            <packagingExcludes>WEB-INF/lib/jetty-*.jar</packagingExcludes>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
