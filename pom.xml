@@ -124,6 +124,24 @@
                         <contextPath>/</contextPath>
                     </webApp>
                 </configuration>
+                <!--
+                Ujorm dependencies are required in the plugin classpath because Jetty 12
+                isolates the webapp classloader. Ujorm's runtime class generator
+                (using javax.tools.JavaCompiler) needs these libraries available
+                to the compiler's classpath to generate internal metadata classes.
+                -->
+                <dependencies>
+                    <dependency>
+                        <groupId>org.ujorm</groupId>
+                        <artifactId>ujo-core</artifactId>
+                        <version>${ujorm.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.ujorm</groupId>
+                        <artifactId>ujo-orm</artifactId>
+                        <version>${ujorm.version}</version>
+                    </dependency>
+                </dependencies>
             </plugin>
         </plugins>
     </build>

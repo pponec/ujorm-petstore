@@ -2,7 +2,6 @@ package org.ujorm.petstore.utilities;
 
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.HttpServlet;
-import jakarta.servlet.http.HttpServletRequest;
 import org.ujorm.petstore.Services;
 
 public abstract class AbstractServlet extends HttpServlet {
@@ -23,11 +22,6 @@ public abstract class AbstractServlet extends HttpServlet {
 
     public Services services() {
         return services;
-    }
-
-    protected String contextPathSlash(HttpServletRequest req) {
-        var result = req.getContextPath();
-        return result.isEmpty() ? "/" : (result + "/");
     }
 
 }
