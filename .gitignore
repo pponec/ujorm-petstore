@@ -21,6 +21,7 @@ coverage/
 # IntelliJ IDEA
 .idea/workspace.xml
 .idea/usage.statistics.xml
+.idea/compiler.xml
 .idea/shelf/
 .idea/tasks.xml
 *.iws

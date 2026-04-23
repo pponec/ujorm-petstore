@@ -1,8 +1,6 @@
 package org.ujorm.petstore;
 
 import jakarta.servlet.annotation.WebServlet;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 import org.ujorm.petstore.Constants.Css;
 import org.ujorm.petstore.Constants.Msg;
 import org.ujorm.petstore.Constants.Status;
@@ -13,7 +11,7 @@ import org.ujorm.tools.web.Element;
 import org.ujorm.tools.web.Html;
 import org.ujorm.tools.web.HtmlElement;
 import org.ujorm.tools.web.ao.HttpParameter;
-import org.ujorm.tools.web.request.HttpContext;
+import org.ujorm.tools.web.request.ExchangeContext;
 
 import java.io.IOException;
 import java.util.EnumMap;
@@ -33,9 +31,7 @@ public class PetServlet extends AbstractServlet {
 
     /** Handles GET requests to display the UI */
     @Override
-    protected void doGet(HttpServletRequest req, HttpServletResponse resp) {
-        var contextPath = contextPathSlash(req);
-        var ctx = HttpContext.ofServlet(req, resp);
+    protected void doGet(ExchangeContext ctx) {
         var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
         var petId = ctx.parameter(PET_ID, Long::parseLong);
         var pets = services().getPets();
@@ -43,23 +39,22 @@ public class PetServlet extends AbstractServlet {
         var petToEdit = findPetToEdit(action, petId);
 
         try (var html = HtmlElement.of(ctx, BOOTSTRAP_CSS)) {
-            renderPage(html, contextPath, pets, petToEdit, categories);
+            renderPage(html, pets, petToEdit, categories, ctx);
         }
     }
 
     /** Handles POST requests to modify data using a standardized action detection */
     @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws IOException {
-        var ctx = HttpContext.ofServlet(req, resp);
+    protected void doPost(ExchangeContext ctx) throws IOException {
         var action = ctx.parameter(ACTION, Action::paramValueOf, Action.UNKNOWN);
         var petId = ctx.parameter(PET_ID, Long::parseLong);
-        var resultUrl = handlePostAction(req, ctx, action, petId);
-        resp.sendRedirect(resultUrl); // Prevents duplicate form submissions (PRG pattern)
+        var resultUrl = handlePostAction(action, petId, ctx);
+        ctx.sendRedirect(resultUrl); // Prevents duplicate form submissions (PRG pattern)
     }
 
-    private void renderPage(HtmlElement html, String contextPath, List<Pet> pets, Optional<Pet> petToEdit, List<Category> categories) {
+    private void renderPage(HtmlElement html, List<Pet> pets, Optional<Pet> petToEdit, List<Category> categories, ExchangeContext ctx) {
         try (var body = html.addBody(Css.container, Css.mt5)) {
-            renderHeader(body, contextPath);
+            renderHeader(body, ctx);
             renderTable(body, pets);
             renderForm(body, petToEdit, categories);
         }
@@ -72,8 +67,8 @@ public class PetServlet extends AbstractServlet {
         };
     }
 
-    private String handlePostAction(HttpServletRequest req, HttpContext ctx, Action action, Long petId) {
-        var resultUrl = contextPathSlash(req);
+    private String handlePostAction(Action action, Long petId, ExchangeContext ctx) {
+        var resultUrl = ctx.getPathSlash();
         switch (action) {
             case BUY -> services().buyPet(petId);
             case DELETE -> services().deletePet(petId);
@@ -88,7 +83,7 @@ public class PetServlet extends AbstractServlet {
         return contextPath + "?" + ACTION + "=" + Action.EDIT + "&" + PET_ID + "=" + petId;
     }
 
-    private void savePet(HttpContext ctx, Long petId) {
+    private void savePet(ExchangeContext ctx, Long petId) {
         services().savePet(
                 petId,
                 ctx.parameter(NAME, ""),
@@ -99,9 +94,10 @@ public class PetServlet extends AbstractServlet {
     /**
      * Renders the page header
      * @param body The body element
-     * @param contextPath The application context path
+     * @param ctx The exchage context
      */
-    private void renderHeader(Element body, String contextPath) {
+    private void renderHeader(Element body, ExchangeContext ctx) {
+        var contextPath = ctx.getPathSlash();
         try (var header = body.addDiv(
                 Css.dFlex,
                 Css.justifyContentBetween,
