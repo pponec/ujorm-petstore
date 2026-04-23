@@ -69,7 +69,11 @@
             <version>${ujorm.version}</version>
         </dependency>
 
-        <!-- Logger -->
+        <dependency>
+            <groupId>org.slf4j</groupId>
+            <artifactId>slf4j-api</artifactId>
+            <version>2.0.12</version>
+        </dependency>
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-jdk14</artifactId>
@@ -131,6 +135,12 @@
                             <resourceBase>${project.basedir}/src/main/resources/META-INF/resources</resourceBase>
                         </resourceBases>
                     </webApp>
+                    <systemProperties>
+                        <systemProperty>
+                            <name>java.util.logging.config.file</name>
+                            <value>${project.basedir}/src/main/resources/logging.properties</value>
+                        </systemProperty>
+                    </systemProperties>
                 </configuration>
                 <!--
                 Ujorm dependencies are required in the plugin classpath because Jetty 12
@@ -148,6 +158,11 @@
                         <groupId>org.ujorm</groupId>
                         <artifactId>ujo-orm</artifactId>
                         <version>${ujorm.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.slf4j</groupId>
+                        <artifactId>slf4j-jdk-platform-logging</artifactId>
+                        <version>2.0.12</version>
                     </dependency>
                 </dependencies>
             </plugin>
