@@ -5,7 +5,8 @@ import jakarta.servlet.http.HttpServlet;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.ujorm.petstore.Services;
-import org.ujorm.tools.web.request.ExchangeContext;
+import org.ujorm.tools.web.request.HttpContext;
+
 import java.io.IOException;
 
 public abstract class AbstractServlet extends HttpServlet {
@@ -26,43 +27,43 @@ public abstract class AbstractServlet extends HttpServlet {
 
     @Override
     protected final void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doGet(ExchangeContext.of(req, resp));
+        doGet(HttpContext.of(req, resp));
     }
 
     @Override
     protected final void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doPost(ExchangeContext.of(req, resp));
+        doPost(HttpContext.of(req, resp));
     }
 
     @Override
     protected final void doPut(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doPut(ExchangeContext.of(req, resp));
+        doPut(HttpContext.of(req, resp));
     }
 
     @Override
     protected final void doDelete(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
-        doDelete(ExchangeContext.of(req, resp));
+        doDelete(HttpContext.of(req, resp));
     }
 
     // --- CTX --
 
     /** @see #doGet(HttpServletRequest, HttpServletResponse)  */
-    protected void doGet(ExchangeContext ctx) throws ServletException, IOException {
+    protected void doGet(HttpContext ctx) throws ServletException, IOException {
 
     }
 
     /** @see #doPost(HttpServletRequest, HttpServletResponse)  */
-    protected void doPost(ExchangeContext ctx) throws ServletException, IOException {
+    protected void doPost(HttpContext ctx) throws ServletException, IOException {
 
     }
 
     /** @see #doPut(HttpServletRequest, HttpServletResponse)  */
-    protected void doPut(ExchangeContext ctx) throws ServletException, IOException {
+    protected void doPut(HttpContext ctx) throws ServletException, IOException {
 
     }
 
     /** @see #doDelete(HttpServletRequest, HttpServletResponse)  */
-    protected void doDelete(ExchangeContext ctx) throws ServletException, IOException {
+    protected void doDelete(HttpContext ctx) throws ServletException, IOException {
 
     }
 

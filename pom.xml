@@ -13,7 +13,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <ujorm.version>3.0.0-RC5</ujorm.version>
+        <ujorm.version>3.0.0-RC6</ujorm.version>
         <avaje.inject.version>10.4</avaje.inject.version>
         <jetty.version>12.1.8</jetty.version>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
