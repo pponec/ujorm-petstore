@@ -6,6 +6,7 @@ import org.ujorm.petstore.Constants.Msg;
 import org.ujorm.petstore.Constants.Status;
 import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Pet;
+import org.ujorm.petstore.Layout.NavItem;
 import org.ujorm.petstore.utilities.AbstractServlet;
 import org.ujorm.tools.web.Element;
 import org.ujorm.tools.web.Html;
@@ -20,13 +21,14 @@ import java.util.Map;
 import java.util.Optional;
 
 import static org.ujorm.petstore.PetServlet.Attrib.*;
+import static org.ujorm.petstore.Constants.*;
 
 /** Web presentation layer for PetStore */
-@WebServlet(urlPatterns = "", loadOnStartup = 1)
+@WebServlet(urlPatterns = Url.PETS, loadOnStartup = 1)
 public class PetServlet extends AbstractServlet {
 
-    /** CSS link */
-    static final String BOOTSTRAP_CSS = "https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css";
+    /** CSS link (delegated to {@link Layout#BOOTSTRAP_CSS} for a single source of truth) */
+    static final String BOOTSTRAP_CSS = Layout.BOOTSTRAP_CSS;
     private static final Map<Status, String> STATUS_OPTIONS = createStatusOptions();
 
     /** Handles GET requests to display the UI */
@@ -53,8 +55,9 @@ public class PetServlet extends AbstractServlet {
     }
 
     private void renderPage(HtmlElement html, List<Pet> pets, Optional<Pet> petToEdit, List<Category> categories, HttpContext ctx) {
+        Layout.addCommonStyles(html);
         try (var body = html.addBody(Css.container, Css.mt5)) {
-            renderHeader(body, ctx);
+            Layout.renderHeader(body, ctx, NavItem.PETS);
             renderTable(body, pets);
             renderForm(body, petToEdit, categories);
         }
@@ -89,27 +92,6 @@ public class PetServlet extends AbstractServlet {
                 ctx.parameter(NAME, ""),
                 ctx.parameter(STATUS, s -> Status.valueOf(s.toUpperCase())),
                 ctx.parameter(CATEGORY_ID, Long::parseLong));
-    }
-
-    /**
-     * Renders the page header
-     * @param body The body element
-     * @param ctx The exchage context
-     */
-    private void renderHeader(Element body, HttpContext ctx) {
-        var contextPath = ctx.getPathSlash();
-        try (var header = body.addDiv(
-                Css.dFlex,
-                Css.justifyContentBetween,
-                Css.alignItemsCenter,
-                Css.mb4,
-                Css.borderBottom,
-                Css.pb3)) {
-            header.addHeading(1, "Ujorm PetStore", Css.textPrimary);
-            header.addAnchor(contextPath)
-                    .addImage(contextPath + Constants.IMG_LOGO, "Ujorm Logo")
-                    .setAttr("width", 150).setAttr("height", 150);
-        }
     }
 
     /**

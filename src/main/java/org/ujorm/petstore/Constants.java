@@ -7,6 +7,20 @@ public interface Constants {
 
     String IMG_LOGO = "images/ujorm3-logo-mini.png";
 
+    /**
+     * Servlet URL patterns. Each value is used both as the {@code @WebServlet}
+     * mapping and as the {@code href} target for in-app navigation, so the
+     * routing stays in sync from a single source of truth.
+     */
+    final class Url {
+        /** {@code PetServlet} mapping — the context root (Jakarta Servlet special pattern). */
+        public static final String PETS = "/";
+        /** {@code InfoServlet} mapping — the project information page. */
+        public static final String INFO = "/info";
+
+        private Url() { }
+    }
+
     /** Pet statuses */
     enum Status implements HttpParameter {
         AVAILABLE,
@@ -31,7 +45,9 @@ public interface Constants {
 
     /** CSS constants */
     final class Css {
+        static final String active = "active";
         static final String alignItemsCenter = "align-items-center";
+        static final String article = "article";
         static final String badge = "badge";
         static final String bgSecondary = "bg-secondary";
         static final String bgSuccess = "bg-success";
@@ -49,14 +65,25 @@ public interface Constants {
         static final String container = "container";
         static final String dFlex = "d-flex";
         static final String dInline = "d-inline";
+        static final String flexWrap = "flex-wrap";
         static final String formControl = "form-control";
         static final String formSelect = "form-select";
+        static final String g2 = "g-2";
         static final String g3 = "g-3";
+        static final String gap2 = "gap-2";
         static final String justifyContentBetween = "justify-content-between";
         static final String mb3 = "mb-3";
         static final String mb4 = "mb-4";
+        static final String mb0 = "mb-0";
+        static final String me2 = "me-2";
         static final String ms1 = "ms-1";
         static final String mt5 = "mt-5";
+        static final String mx3 = "mx-3";
+        static final String nav = "nav";
+        static final String navIcon = "nav-icon";
+        static final String navItem = "nav-item";
+        static final String navLink = "nav-link";
+        static final String navPills = "nav-pills";
         static final String pb3 = "pb-3";
         static final String row = "row";
         static final String table = "table";
