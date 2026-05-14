@@ -97,11 +97,10 @@ export default function App() {
             </p>
           </div>
           <div className="mt-6 md:mt-0">
-            <img 
-              src="https://picsum.photos/seed/ujorm/150/150" 
-              alt="Ujorm Logo" 
-              className="w-24 h-24 rounded-2xl shadow-sm border border-slate-200"
-              referrerPolicy="no-referrer"
+            <img
+              src="/images/ujorm3-logo-mini.png"
+              alt="Ujorm Logo"
+              className="w-24 h-24 rounded-2xl shadow-sm border border-slate-200 object-contain bg-white"
             />
           </div>
         </header>

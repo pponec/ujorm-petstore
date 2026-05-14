@@ -13,8 +13,12 @@ public interface Constants {
      * routing stays in sync from a single source of truth.
      */
     final class Url {
-        /** {@code PetServlet} mapping — the context root (Jakarta Servlet special pattern). */
-        public static final String PETS = "/";
+        /**
+         * {@code PetServlet} mapping — context root only.
+         * Must be {@code ""}, not {@code "/"}: pattern {@code "/"} registers the default servlet and
+         * intercepts static resources (for example {@code /images/ujorm3-logo-mini.png}).
+         */
+        public static final String PETS = "";
         /** {@code InfoServlet} mapping — the project information page. */
         public static final String INFO = "/info";
 

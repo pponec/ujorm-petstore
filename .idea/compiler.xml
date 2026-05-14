@@ -19,7 +19,7 @@
           <entry name="$MAVEN_REPOSITORY$/io/avaje/avaje-inject-events/10.4/avaje-inject-events-10.4.jar" />
           <entry name="$MAVEN_REPOSITORY$/io/avaje/avaje-spi-service/2.6/avaje-spi-service-2.6.jar" />
           <entry name="$MAVEN_REPOSITORY$/io/avaje/avaje-spi-core/2.6/avaje-spi-core-2.6.jar" />
-          <entry name="$MAVEN_REPOSITORY$/org/ujorm/ujorm-meta-processor/3.0.0-RC5/ujorm-meta-processor-3.0.0-RC5.jar" />
+          <entry name="$MAVEN_REPOSITORY$/org/ujorm/ujorm-meta-processor/3.0.0/ujorm-meta-processor-3.0.0.jar" />
         </processorPath>
         <module name="ujorm-petstore" />
       </profile>

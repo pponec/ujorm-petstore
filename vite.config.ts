@@ -6,6 +6,8 @@ import {defineConfig, loadEnv} from 'vite';
 export default defineConfig(({mode}) => {
   const env = loadEnv(mode, '.', '');
   return {
+    // Same static root as the Java app (META-INF/resources) so /images/... works in dev and build.
+    publicDir: path.resolve(__dirname, 'src/main/resources/META-INF/resources'),
     plugins: [react(), tailwindcss()],
     resolve: {
       alias: {
