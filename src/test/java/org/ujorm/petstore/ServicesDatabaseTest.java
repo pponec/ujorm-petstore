@@ -47,8 +47,6 @@ class ServicesDatabaseTest extends AbstractDatabaseTest {
 
     @Test
     void shouldBuyAvailablePetAndCreateOrder() {
-        createDefaultCustomer();
-
         var availablePet = services.getPets().stream()
                 .filter(p -> p.status() == Status.AVAILABLE)
                 .findFirst()
@@ -62,16 +60,5 @@ class ServicesDatabaseTest extends AbstractDatabaseTest {
         assertEquals(Status.SOLD, soldPet.status());
         assertEquals(soldPet.id(), order.pet().id());
         assertEquals(1L, order.customer().id());
-    }
-
-    private void createDefaultCustomer() {
-        try (var stmt = connection().prepareStatement("INSERT INTO customer (id, name) VALUES (?, ?)")) {
-            stmt.setLong(1, 1L);
-            stmt.setString(2, "Reference Customer");
-            stmt.executeUpdate();
-            connection().commit();
-        } catch (Exception e) {
-            throw new IllegalStateException("Failed to create default customer for test.", e);
-        }
     }
 }
