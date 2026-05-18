@@ -123,7 +123,7 @@ This "rebellious" architecture is ideal for developers seeking a simpler alterna
 **Alternative Comparison:**
 * **ORM:** MyBatis, Jdbi.
 * **Web:** j2html, Wicket, Vaadin.
-* **DI:** Dagger 2, Micronaut Inject, Spring Boot
+* **DI:** Dagger, Micronaut Inject, Spring Boot
 
 ---
 
