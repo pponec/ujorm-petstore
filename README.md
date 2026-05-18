@@ -87,9 +87,9 @@ public List<Pet> findAll(long fromId) {
 
 ## Tech Stack
 
-* **Java:** 21
+* **Java:** 25
 * **DI Framework:** Avaje Inject 10.4
-* **ORM and Web:** Ujorm 3.0.0-RC5 (`ujo-orm`, `ujo-web`)
+* **ORM and Web:** Ujorm 3.0.0 (`ujo-orm`, `ujo-web`)
 * **Database:** H2 (In-memory)
 * **Server:** Jetty (via Maven Plugin) / Tomcat compatible
 * **UI Styling:** Bootstrap 5.3.3 (CDN)
@@ -104,10 +104,10 @@ public List<Pet> findAll(long fromId) {
 
 ## How to Run the Project
 
-1. Ensure you have **JDK 21** and **Maven** installed.
+1. Ensure you have **JDK 25** .
 2. Run in the root directory:
    ```bash
-   mvn jetty:run
+   ./mvnw jetty:run
    ```
 3. Open your browser at: [http://localhost:8080](http://localhost:8080)
 
@@ -121,9 +121,9 @@ This "rebellious" architecture is ideal for developers seeking a simpler alterna
 * **The "Java-First" Philosophy:** By keeping everything (SQL mapping, Dependency Injection, UI structure, Logic) within the Java compiler's reach, you minimize context switching and maximize reliability.
 
 **Alternative Comparison:**
-* **ORM:** MyBatis, Jdbi, Spring Data JDBC.
+* **ORM:** MyBatis, Jdbi.
 * **Web:** j2html, Wicket, Vaadin.
-* **DI:** Dagger 2, Micronaut Inject.
+* **DI:** Dagger 2, Micronaut Inject, Spring Boot
 
 ---
 
