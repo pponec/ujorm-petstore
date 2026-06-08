@@ -89,7 +89,7 @@ public List<Pet> findAll(long fromId) {
 
 * **Java:** 25
 * **DI Framework:** Avaje Inject 10.4
-* **ORM and Web:** Ujorm 3.0.3 (`ujo-orm`, `ujo-web`)
+* **ORM and Web:** Ujorm 3.0.4 (`ujo-orm`, `ujo-web`)
 * **Database:** H2 (In-memory)
 * **Server:** Jetty (via Maven Plugin) / Tomcat compatible
 * **UI Styling:** Bootstrap 5.3.3 (CDN)
