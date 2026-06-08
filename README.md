@@ -42,6 +42,44 @@ The application demonstrates the power of Ujorm3 modules combined with modern co
 ### 3. Safe Request Handling
 * **HttpParameter Interface:** Uses `enum` implementations to centralize web parameter definitions, protecting the application from mapping errors or form-name typos.
 
+### 4. Declarative Transactions (`@Transactional`)
+
+Transaction boundaries are declared **at the service level** with a custom
+[`@Transactional`](src/main/java/org/ujorm/petstore/utilities/Transactional.java) annotation —
+the same mental model as **Spring Boot** — instead of implicitly wrapping every incoming HTTP
+request. A transaction is opened because a *business method* is invoked, not because a new HTTP
+session arrived, so the service layer works the same whether it is called from a servlet, a
+scheduled job, a test, or a message consumer.
+
+```java
+@Transactional(readOnly = true)
+public List<Pet> getPets() { ... }      // SELECT in a read-only transaction
+
+@Transactional
+public PetOrder buyPet(Long petId) {     // UPDATE + INSERT, committed on success,
+    ...                                  // rolled back on any exception
+}
+```
+
+**How it works** — the annotation is meta-annotated with Avaje's `@Aspect`, so the
+`avaje-inject-generator` weaves a proxy **at compile time** (no runtime reflection). Each
+intercepted call is routed through
+[`TransactionalAspect`](src/main/java/org/ujorm/petstore/utilities/TransactionalAspect.java)
+into [`TransactionManager`](src/main/java/org/ujorm/petstore/utilities/TransactionManager.java),
+which opens a JDBC `Connection`, binds it to the current thread, and commits or rolls back
+around the method. The service methods themselves stay free of transaction boilerplate.
+
+* **Propagation `REQUIRED`** — a `@Transactional` method invoked from within an active
+  transaction joins it (one commit at the outermost boundary).
+* **`readOnly` hint** — read methods flag the connection read-only, documenting intent and
+  letting the driver/pool optimise.
+* **Proxy semantics** — exactly like Spring, the aspect only fires when the bean is called
+  *through its proxy*; an internal `this.method()` self-invocation does not start a new
+  transaction (it simply reuses the surrounding one).
+
+> The alternative, *programmatic* style (injecting `TransactionManager` and wrapping bodies in
+> `tm.run(() -> { ... })`) is still available for cases that need fine-grained, imperative control.
+
 ## Code Samples
 
 The project is designed with an emphasis on straightforwardness.

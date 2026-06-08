@@ -18,26 +18,24 @@ import org.ujorm.petstore.meta.QCategory;
 import org.ujorm.petstore.meta.QPet;
 import org.ujorm.tools.Check;
 import org.ujorm.petstore.Constants.Status;
+import org.ujorm.petstore.utilities.Transactional;
 
 /**
  * PetStore Service handling both business logic and data access using Ujorm3 ORM.
  * <p>
- *   This class utilizes a {@code Supplier<Connection>} to access the database, offloading
- *   transaction management to a {@code TransactionFilter} that wraps each HTTP request.
- *   This architectural approach enhances code readability and maintainability
- *   by eliminating repetitive transaction boilerplate, allowing the service methods to focus
- *   purely on business logic and the clarity of the ORM API while ensuring transactional
- *   integrity through the injected supplier.
+ *   Transaction boundaries are declared <b>at the service level</b> with the
+ *   {@link org.ujorm.petstore.utilities.Transactional @Transactional} annotation — the
+ *   Spring Boot model — rather than reacting to each incoming HTTP request. Each annotated
+ *   method runs in its own transaction (or joins an outer one); the injected
+ *   {@code Supplier<Connection>} resolves the connection bound to that active transaction,
+ *   so method bodies stay free of transaction boilerplate and focus on the ORM API.
  * </p>
  * <p>
- *   To manage transactions explicitly, replace the {@code Supplier<Connection>} with
- *   a {@code TransactionManager} attribute, wrap method bodies in {@code tm.run(() -> { ... })}
- *   blocks, and disable the {@code TransactionFilter} registration in the {@code Bootstrap} class.
+ *   Read methods are flagged {@code @Transactional(readOnly = true)}; write methods use the
+ *   default read-write transaction. As with Spring, the aspect only fires when the bean is
+ *   called through its proxy, so an internal call such as {@code getCurrentCustomer()} from
+ *   {@link #buyPet(Long)} simply reuses the surrounding write transaction.
  * </p>
- * Example of the explicit transactions:
- * <pre>
- * tm.run(() -> PET_EM.crud(tm.getConnection()).deleteById(id));
- * </pre>
  */
 @Singleton
 public class Services {
@@ -57,6 +55,7 @@ public class Services {
     }
 
     /** Gets all pets including their categories. */
+    @Transactional(readOnly = true)
     public List<Pet> getPets() {
         return SelectQuery.run(connection(), PET_EM, query -> query
                 .columns(true)
@@ -66,6 +65,7 @@ public class Services {
     }
 
     /** Gets all categories. */
+    @Transactional(readOnly = true)
     public List<Category> getCategories() {
         return SelectQuery.run(connection(), CATEGORY_EM, query -> query
                 .columns(true)
@@ -74,6 +74,7 @@ public class Services {
     }
 
     /** Finds a specific pet by its identifier. */
+    @Transactional(readOnly = true)
     public Optional<Pet> getPetById(Long idNullable) {
         return idNullable != null
                 ? PET_EM.crud(connection()).findById(idNullable)
@@ -81,12 +82,14 @@ public class Services {
     }
 
     /** Gets the default customer. */
+    @Transactional(readOnly = true)
     public Customer getCurrentCustomer() {
         return CUSTOMER_EM.crud(connection()).findById(1L).orElseThrow(() ->
                 new IllegalStateException("Default customer is missing."));
     }
 
     /** Processes a pet purchase transaction. */
+    @Transactional
     public PetOrder buyPet(Long petId) {
         if (petId == null) {
             return null;
@@ -105,6 +108,7 @@ public class Services {
     }
 
     /** Saves a new pet or updates an existing one. */
+    @Transactional
     public void savePet(Long id, String name, Status status, Long categoryId) {
         var extName = Check.isEmpty(name) ? "?" : name;
         var category = CATEGORY_EM.crud(connection()).findById(categoryId).orElseThrow();
@@ -113,6 +117,7 @@ public class Services {
     }
 
     /** Deletes a pet from the store. */
+    @Transactional
     public void deletePet(Long id) {
         if (id != null) {
             PET_EM.crud(connection()).deleteById(id);
