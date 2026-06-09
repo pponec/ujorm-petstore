@@ -6,7 +6,7 @@ import org.ujorm.petstore.Constants.Status;
 import org.ujorm.petstore.Entities.Category;
 import org.ujorm.petstore.Entities.Customer;
 import org.ujorm.petstore.Entities.Pet;
-import org.ujorm.tools.jdbc.SqlBuilder;
+import org.ujorm.orm.SqlQuery;
 
 import java.sql.Connection;
 
@@ -20,13 +20,13 @@ public class DatabaseInitializer {
 
     /** Creates database tables if not already initialized */
     public void createTables(Connection connection) {
-        try (var query = new SqlBuilder(connection)) {
+        try (var query = new SqlQuery(connection)) {
             changeset_01(query, connection);
         }
     }
 
     /** Executes DDL and initial DML scripts using standard SQL identity syntax */
-    private void changeset_01(SqlBuilder query, Connection connection) {
+    private void changeset_01(SqlQuery query, Connection connection) {
         var tableExists = query.sql("""
                         SELECT 1 FROM information_schema.tables
                         WHERE LOWER(table_name) = 'employee'
