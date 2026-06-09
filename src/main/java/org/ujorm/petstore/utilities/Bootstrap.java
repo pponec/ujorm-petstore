@@ -8,7 +8,6 @@ import org.slf4j.LoggerFactory;
 import org.ujorm.petstore.DatabaseInitializer;
 
 import javax.sql.DataSource;
-import java.util.EnumSet;
 import java.util.logging.LogManager;
 
 /**
@@ -26,7 +25,6 @@ public class Bootstrap implements ServletContextListener {
         // Load logging configuration as the very first step to ensure ISO formatting
         loadLoggingConfiguration();
         LOGGER.info("Initializing Ujorm PetStore ecosystem...");
-        var ctx = sce.getServletContext();
 
         // Initialize Avaje DI container
         beanScope = BeanScope.builder().build();
@@ -34,8 +32,6 @@ public class Bootstrap implements ServletContextListener {
         // Initialize Database Schema
         initSchema();
 
-        // Register Filters
-        registerFilter(ctx, TransactionFilter.class);
         LOGGER.info("Initialization complete.");
     }
 
@@ -56,17 +52,6 @@ public class Bootstrap implements ServletContextListener {
         } catch (Exception e) {
             LOGGER.error("Failed to initialize database schema", e);
             throw new RuntimeException(e);
-        }
-    }
-
-    /** Registers a filter obtained from the DI scope */
-    private void registerFilter(ServletContext ctx, Class<? extends Filter> filterClass) {
-        var filterInstance = beanScope.get(filterClass);
-        var registration = ctx.addFilter(filterClass.getSimpleName(), filterInstance);
-
-        if (registration != null) {
-            registration.addMappingForUrlPatterns(EnumSet.of(DispatcherType.REQUEST), true, "/*");
-            LOGGER.info("Registered filter: {}", filterClass.getSimpleName());
         }
     }
 

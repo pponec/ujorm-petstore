@@ -26,12 +26,28 @@ public class TransactionManager {
     }
 
     /**
-     * Executes a functional block within a transaction.
+     * Executes a functional block within a read-write transaction.
      * @param task Task to execute
      * @param <T> Result type
      * @return Task result
      */
     public <T> T run(SupplierThrowing<T> task) {
+        return run(false, task);
+    }
+
+    /**
+     * Executes a functional block within a transaction.
+     * <p>
+     *   Propagation is {@code REQUIRED}: when a transaction is already active on the
+     *   current thread, the task simply joins it (no nested commit, the {@code readOnly}
+     *   hint of the inner call is ignored — the outermost boundary wins).
+     * </p>
+     * @param readOnly Flag the JDBC connection as read-only (write operations may fail).
+     * @param task Task to execute
+     * @param <T> Result type
+     * @return Task result
+     */
+    public <T> T run(boolean readOnly, SupplierThrowing<T> task) {
         var existingConnection = CONNECTION_HOLDER.get();
         if (existingConnection != null) {
             // Already in a transaction
@@ -44,6 +60,7 @@ public class TransactionManager {
 
         try (var connection = dataSource.getConnection()) {
             connection.setAutoCommit(false);
+            connection.setReadOnly(readOnly);
             CONNECTION_HOLDER.set(connection);
             try {
                 T result = task.get();
@@ -73,19 +90,21 @@ public class TransactionManager {
     }
 
     /**
-     * Returns the current transaction-aware connection.
-     * If no transaction is active, returns a new connection from the pool (be careful with leaks).
-     * In this app, we expect active transactions for writes.
+     * Returns the connection bound to the current transaction.
+     * <p>
+     *   A transaction must be active — typically opened by a {@link Transactional}
+     *   service method. There is intentionally no fallback to a fresh pool connection:
+     *   such a connection would never be committed or closed (a leak) and would silently
+     *   run outside any transaction. Annotate the calling service method with
+     *   {@code @Transactional} (or wrap the call in {@link #run(SupplierThrowing)}).
+     * </p>
+     * @throws IllegalStateException when no transaction is active on the current thread.
      */
     public Connection getConnection() {
         var conn = CONNECTION_HOLDER.get();
         if (conn == null) {
-            try {
-                // Fallback for read-only non-transactional operations
-                return dataSource.getConnection();
-            } catch (SQLException e) {
-                throw new RuntimeException("Could not get connection from data source", e);
-            }
+            throw new IllegalStateException("No active transaction on the current thread. "
+                    + "Annotate the service method with @Transactional.");
         }
         return conn;
     }
