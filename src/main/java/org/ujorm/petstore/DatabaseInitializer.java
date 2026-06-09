@@ -1,5 +1,11 @@
 package org.ujorm.petstore;
 
+import org.ujorm.orm.core.EntityManager;
+import org.ujorm.orm.utils.EntityContext;
+import org.ujorm.petstore.Constants.Status;
+import org.ujorm.petstore.Entities.Category;
+import org.ujorm.petstore.Entities.Customer;
+import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.tools.jdbc.SqlBuilder;
 
 import java.sql.Connection;
@@ -7,15 +13,20 @@ import java.sql.Connection;
 /** Initial database setup and schema generation */
 public class DatabaseInitializer {
 
+    private static final EntityContext CTX = EntityContext.ofDefault();
+    private static final EntityManager<Category, Long> CATEGORY_EM = CTX.entityManager(Category.class);
+    private static final EntityManager<Customer, Long> CUSTOMER_EM = CTX.entityManager(Customer.class);
+    private static final EntityManager<Pet, Long> PET_EM = CTX.entityManager(Pet.class);
+
     /** Creates database tables if not already initialized */
     public void createTables(Connection connection) {
         try (var query = new SqlBuilder(connection)) {
-            changeset_01(query);
+            changeset_01(query, connection);
         }
     }
 
     /** Executes DDL and initial DML scripts using standard SQL identity syntax */
-    private void changeset_01(SqlBuilder query) {
+    private void changeset_01(SqlBuilder query, Connection connection) {
         var tableExists = query.sql("""
                         SELECT 1 FROM information_schema.tables
                         WHERE LOWER(table_name) = 'employee'
@@ -69,34 +80,21 @@ public class DatabaseInitializer {
                 )
                 """).execute();
 
-        insertDataRows_01(query);
+        insertDataRows_01(connection);
     }
 
-    /** Insert Data */
-    private void insertDataRows_01(SqlBuilder query) {
-        query.sql("INSERT INTO category (name) VALUES (:name)");
-        var dogsId = query.bind("name", "Dogs").executeInsert()
-                .getGeneratedLastKey(rs -> rs.getLong(1));
-        var catsId = query.bind("name", "Cats").executeInsert()
-                .getGeneratedLastKey(rs -> rs.getLong(1));
-        var birdsId = query.bind("name", "Birds").executeInsert()
-                .getGeneratedLastKey(rs -> rs.getLong(1));
+    /** Inserts the initial demo data using entity objects and the {@link EntityManager}. */
+    private void insertDataRows_01(Connection connection) {
+        var categoryCrud = CATEGORY_EM.crud(connection);
+        var dogs = categoryCrud.insert(new Category(null, "Dogs"));
+        var cats = categoryCrud.insert(new Category(null, "Cats"));
+        var birds = categoryCrud.insert(new Category(null, "Birds"));
+        CUSTOMER_EM.crud(connection).insert(new Customer(null, "Demo guest"));
 
-        // Services.getCurrentCustomer() picks the first customer by id (this anonymous demo buyer).
-        query.sql("""
-                INSERT INTO customer (name) VALUES ('Demo guest')
-                """).execute();
-
-        query.sql("""
-                        INSERT INTO pet (name, status, category_id) VALUES
-                         ('Rex', 'AVAILABLE', :dogsId),
-                         ('Buddy', 'PENDING', :dogsId),
-                         ('Daisy', 'AVAILABLE', :catsId),
-                         ('Tweety', 'SOLD', :birdsId)
-                        """)
-                .bind("dogsId", dogsId)
-                .bind("catsId", catsId)
-                .bind("birdsId", birdsId)
-                .execute();
+        var petCrud = PET_EM.crud(connection);
+        petCrud.insert(new Pet(null, "Rex", Status.AVAILABLE, dogs));
+        petCrud.insert(new Pet(null, "Buddy", Status.PENDING, dogs));
+        petCrud.insert(new Pet(null, "Daisy", Status.AVAILABLE, cats));
+        petCrud.insert(new Pet(null, "Tweety", Status.SOLD, birds));
     }
 }
