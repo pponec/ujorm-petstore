@@ -82,9 +82,9 @@ public class DatabaseInitializer {
         var birdsId = query.bind("name", "Birds").executeInsert()
                 .getGeneratedLastKey(rs -> rs.getLong(1));
 
-        // Services.getCurrentCustomer() resolves id = 1 (anonymous demo buyer).
+        // Services.getCurrentCustomer() picks the first customer by id (this anonymous demo buyer).
         query.sql("""
-                INSERT INTO customer (id, name) VALUES (1, 'Demo guest')
+                INSERT INTO customer (name) VALUES ('Demo guest')
                 """).execute();
 
         query.sql("""

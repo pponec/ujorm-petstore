@@ -15,6 +15,7 @@ import org.ujorm.petstore.Entities.Customer;
 import org.ujorm.petstore.Entities.Pet;
 import org.ujorm.petstore.Entities.PetOrder;
 import org.ujorm.petstore.meta.QCategory;
+import org.ujorm.petstore.meta.QCustomer;
 import org.ujorm.petstore.meta.QPet;
 import org.ujorm.tools.Check;
 import org.ujorm.petstore.Constants.Status;
@@ -81,11 +82,14 @@ public class Services {
                 : Optional.empty();
     }
 
-    /** Gets the default customer. */
+    /** Gets the default customer, i.e. the first one ordered by its identifier. */
     @Transactional(readOnly = true)
     public Customer getCurrentCustomer() {
-        return CUSTOMER_EM.crud(connection()).findById(1L).orElseThrow(() ->
-                new IllegalStateException("Default customer is missing."));
+        return SelectQuery.run(connection(), CUSTOMER_EM, query -> query
+                .columns(true)
+                .tail("ORDER BY", QCustomer.id)
+                .findFirst())
+                .orElseThrow(() -> new IllegalStateException("Default customer is missing."));
     }
 
     /** Processes a pet purchase transaction. */
