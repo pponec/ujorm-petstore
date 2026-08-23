@@ -13,7 +13,7 @@
 
     <properties>
         <java.version>25</java.version>
-        <ujorm.version>3.0.4</ujorm.version>
+        <ujorm.version>3.0.6-SNAPSHOT</ujorm.version>
         <avaje.inject.version>10.4</avaje.inject.version>
         <jetty.version>12.1.8</jetty.version>
         <junit.version>5.12.2</junit.version>
@@ -124,6 +124,38 @@
                 </configuration>
             </plugin>
 
+            <!--
+            Ujorm Handler Pre-compiler: builds the DomainHandler classes at build time,
+            so no Java compiler is needed at runtime (GraalVM native image, plain JRE,
+            or an isolated servlet class loader). The entity list comes from the
+            META-INF/ujorm/entities.lst index written by the Ujorm annotation processor.
+            -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.5.0</version>
+                <executions>
+                    <execution>
+                        <id>ujorm-precompile-handlers</id>
+                        <phase>process-classes</phase>
+                        <goals>
+                            <goal>exec</goal>
+                        </goals>
+                        <configuration>
+                            <executable>${java.home}/bin/java</executable>
+                            <classpathScope>compile</classpathScope>
+                            <arguments>
+                                <argument>-classpath</argument>
+                                <classpath/>
+                                <argument>org.ujorm.core.generator.HandlerPrecompiler</argument>
+                                <argument>${project.build.outputDirectory}</argument>
+                                <argument>${project.build.directory}/generated-sources/ujorm-handlers</argument>
+                            </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
             <!-- WAR Plugin -->
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
@@ -158,22 +190,11 @@
                     </systemProperties>
                 </configuration>
                 <!--
-                Ujorm dependencies are required in the plugin classpath because Jetty 12
-                isolates the webapp classloader. Ujorm's runtime class generator
-                (using javax.tools.JavaCompiler) needs these libraries available
-                to the compiler's classpath to generate internal metadata classes.
+                The Ujorm libraries are no longer needed on the plugin class path: the domain
+                handlers are pre-compiled by the exec-maven-plugin above, so Jetty's isolated
+                webapp class loader has nothing left to compile at runtime.
                 -->
                 <dependencies>
-                    <dependency>
-                        <groupId>org.ujorm</groupId>
-                        <artifactId>ujo-core</artifactId>
-                        <version>${ujorm.version}</version>
-                    </dependency>
-                    <dependency>
-                        <groupId>org.ujorm</groupId>
-                        <artifactId>ujo-orm</artifactId>
-                        <version>${ujorm.version}</version>
-                    </dependency>
                     <dependency>
                         <groupId>org.slf4j</groupId>
                         <artifactId>slf4j-jdk-platform-logging</artifactId>

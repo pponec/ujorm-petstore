@@ -33,6 +33,12 @@ The application demonstrates the power of Ujorm3 modules combined with modern co
 * **Type-Safe SQL Builder:** An annotation processor generates metamodels (e.g., `QPet`) at compile-time. This eliminates typos in column names and allows the compiler to catch errors before the app even runs.
 * **SQL Transparency:** Unlike heavy JPA frameworks, there are no `LazyInitializationException` or hidden N+1 issues. You have full control over the `SelectQuery`.
 * **The Mapping Advantage:** Ujorm bridges the gap between raw SQL and object mapping. You can write native SQL and easily map results to Java records, keeping the SQL debuggable in any DB client.
+* **No Runtime Compilation:** The `DomainHandler` classes, which Ujorm normally generates and compiles
+  on the first use of an entity, are pre-built during the Maven `process-classes` phase by
+  `org.ujorm.core.generator.HandlerPrecompiler` (see the `exec-maven-plugin` block in [pom.xml](pom.xml)).
+  The entity list comes from the `META-INF/ujorm/entities.lst` index written by the Ujorm annotation
+  processor. The application therefore starts on a plain **JRE** with no Java compiler, and the
+  Jetty plugin no longer needs the Ujorm jars on its own class path.
 
 ### 2. UI Creation (ujo-web)
 * **Pure Java HTML Rendering:** Replaces traditional engines like Thymeleaf or JSP. HTML is rendered directly from Java using the `HtmlElement` builder and `try-with-resources` blocks.
