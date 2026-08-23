@@ -29,11 +29,12 @@
         </dependency>
 
         <!-- Database -->
+        <!-- The compile scope is needed by JdbcProvider, which wires the H2 DataSource
+             statically so that no driver lookup happens at runtime. -->
         <dependency>
             <groupId>com.h2database</groupId>
             <artifactId>h2</artifactId>
             <version>2.3.232</version>
-            <scope>runtime</scope>
         </dependency>
         <dependency>
             <groupId>com.zaxxer</groupId>
@@ -46,10 +47,20 @@
             <artifactId>jakarta.persistence-api</artifactId>
             <version>3.1.0</version>
         </dependency>
+        <!--
+            Embedded servlet container of the native binary built by GraalVM (see Main.java).
+            It shares the version property with the Jetty plugin below, so the development
+            container and the embedded one can never drift apart. It also brings the
+            jakarta.servlet-api, which used to be declared here on its own.
+
+            The provided scope is the accurate one: a servlet container is supplied by the
+            deployment target, and it keeps the WAR free of a second copy of Jetty. The whole
+            tree stays on the compile class path, hence the native build sees it as well.
+        -->
         <dependency>
-            <groupId>jakarta.servlet</groupId>
-            <artifactId>jakarta.servlet-api</artifactId>
-            <version>6.0.0</version>
+            <groupId>org.eclipse.jetty.ee10</groupId>
+            <artifactId>jetty-ee10-servlet</artifactId>
+            <version>${jetty.version}</version>
             <scope>provided</scope>
         </dependency>
 
@@ -68,6 +79,19 @@
             <groupId>org.ujorm</groupId>
             <artifactId>ujo-web</artifactId>
             <version>${ujorm.version}</version>
+        </dependency>
+
+        <!--
+            Annotations of the GraalVM substitution in the nativeimage package. The version
+            matches the GraalVM of the Docker image in run-ujorm-petstore-native.sh. It is a
+            build-time only artifact: provided scope keeps it out of the WAR, and nothing loads
+            the substitution class on a JVM.
+        -->
+        <dependency>
+            <groupId>org.graalvm.sdk</groupId>
+            <artifactId>nativeimage</artifactId>
+            <version>25.0.2</version>
+            <scope>provided</scope>
         </dependency>
 
         <dependency>
@@ -151,6 +175,34 @@
                                 <argument>${project.build.outputDirectory}</argument>
                                 <argument>${project.build.directory}/generated-sources/ujorm-handlers</argument>
                             </arguments>
+                        </configuration>
+                    </execution>
+                </executions>
+            </plugin>
+
+            <!--
+            Collects the dependencies into target/deps, so the native-image build
+            can pass a plain class path. See run-ujorm-petstore-native.sh
+            -->
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.8.1</version>
+                <executions>
+                    <execution>
+                        <id>ujorm-native-classpath</id>
+                        <phase>prepare-package</phase>
+                        <goals>
+                            <goal>copy-dependencies</goal>
+                        </goals>
+                        <configuration>
+                            <outputDirectory>${project.build.directory}/deps</outputDirectory>
+                            <!-- "compile" means compile + provided + system in this plugin,
+                                 so the embedded Jetty ends up on the native class path too. -->
+                            <includeScope>compile</includeScope>
+                            <!-- The GraalVM artifacts are the image builder; native-image
+                                 rejects them on the class path of the image it builds. -->
+                            <excludeGroupIds>org.graalvm.nativeimage,org.graalvm.sdk,org.graalvm.compiler,org.graalvm.truffle,org.graalvm.polyglot</excludeGroupIds>
                         </configuration>
                     </execution>
                 </executions>
