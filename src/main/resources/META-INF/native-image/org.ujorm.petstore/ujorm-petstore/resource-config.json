@@ -1,0 +1,47 @@
+{
+  "resources": {
+    "includes": [
+      {
+        "_comment": "ServiceLoader files of this application and its libraries, listed one by one. A wildcard over META-INF/services also matched the JDK modules and dragged the AWT rendering engine into the image.",
+        "pattern": "\\QMETA-INF/services/io.avaje.inject.spi.InjectExtension\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/java.sql.Driver\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/org.eclipse.jetty.http.HttpFieldPreEncoder\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/services/org.slf4j.spi.SLF4JServiceProvider\\E"
+      },
+      {
+        "pattern": "\\QMETA-INF/ujorm/entities.lst\\E"
+      },
+      {
+        "pattern": "META-INF/resources.*",
+        "_comment": "Static web resources. The pattern must match the directory entries too, because Jetty resolves the base resource as a class loader directory."
+      },
+      {
+        "pattern": "\\Qlogging.properties\\E"
+      },
+      {
+        "pattern": "\\Qujorm-config.properties\\E"
+      },
+      {
+        "pattern": "\\Qinfo.md\\E"
+      },
+      {
+        "_comment": "The Jetty DefaultServlet loads this stylesheet while starting up.",
+        "pattern": "\\Qorg/eclipse/jetty/server/jetty-dir.css\\E"
+      }
+    ]
+  },
+  "bundles": [
+    {
+      "name": "jakarta.servlet.LocalStrings"
+    },
+    {
+      "name": "jakarta.servlet.http.LocalStrings"
+    }
+  ]
+}
