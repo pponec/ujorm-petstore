@@ -111,10 +111,16 @@ Measured on Ubuntu 24.04, the very same `Main` class in both columns:
 |---|---|---|---|
 | First response after start | **33.5 ms** | 701.5 ms | **21×** |
 | Resident memory | **50 MB** | 190 MB | 3.8× |
-| Artifact | 55 MB binary | 3.4 MB WAR + a JVM | — |
+| Artifact | 55 MB binary | 3.4 MB WAR + 390 MB JDK 25 | 7× |
 
 The binary really is standalone — copied alone into an empty directory it still serves every page
-and the static images, with no shared library beside it.
+and the static images, with no shared library beside it. That is what makes the last row a fair
+comparison: the native executable replaces the WAR *and* the runtime under it.
+
+390 MB is Amazon Corretto 25 unpacked, as installed. Roughly 140 MB of that is material a server
+never executes — `jmods`, `src.zip`, headers and manual pages — so a JRE-shaped subset lands near
+250 MB, and a runtime trimmed with `jlink` to the modules this application actually uses would be
+smaller again.
 
 ##### How the start-up figure was taken
 
