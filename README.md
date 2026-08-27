@@ -105,16 +105,34 @@ GraalVM on the host: the build runs inside a Docker image.
 Docker is the only requirement; the JVM way of running the project keeps its own script and its
 own JDK requirement, see [How to Run the Project](#how-to-run-the-project).
 
-Measured on Ubuntu 24.04, the very same `Main` class in both rows:
+Measured on Ubuntu 24.04, the very same `Main` class in both columns:
 
-| | Native binary | JVM |
-|---|---|---|
-| First response after start | **35 ms** | 700 ms |
-| Resident memory | **50 MB** | 190 MB |
-| Artifact | 55 MB binary | 3.4 MB WAR + a JVM |
+| | Native binary | JVM | Ratio |
+|---|---|---|---|
+| First response after start | **33.5 ms** | 701.5 ms | **21×** |
+| Resident memory | **50 MB** | 190 MB | 3.8× |
+| Artifact | 55 MB binary | 3.4 MB WAR + a JVM | — |
 
 The binary really is standalone — copied alone into an empty directory it still serves every page
 and the static images, with no shared library beside it.
+
+##### How the start-up figure was taken
+
+The clock runs from launching the process to the **first successful `GET /`** — so it covers Jetty
+coming up, the Avaje container being built, the connection pool opening, H2 creating the schema and
+seeding it, and the page being rendered from a real SQL query. Not "the process is alive".
+
+Both columns run `org.ujorm.petstore.Main` from the same class path, so this compares a JVM against
+native code, not a WAR against a binary. The readiness loop is plain bash over `/dev/tcp` rather
+than a `curl` loop, because spawning a process per attempt would distort a 33 ms measurement by
+more than ten per cent. Nine samples per series, three series, the first one discarded as a warm-up;
+the two that count agreed within 3 %, and the table shows their averaged medians. Hardware: Ubuntu
+24.04, JDK 25, GraalVM CE 25.0.2.
+
+Tuning the JVM for start-up narrows the gap but does not close it: `-XX:TieredStopAtLevel=1`, which
+keeps the C1 compiler and skips the expensive C2 profiling, brings the JVM to 582 ms — still **17×**
+slower. The distance is not a misconfiguration. It is the virtual machine starting, loading and
+verifying classes, and interpreting bytecode before it ever reaches the application.
 
 #### Why Ujorm can do this at all
 
