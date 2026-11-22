@@ -1,0 +1,27 @@
+[
+  {
+    "_comment": "The ujo-web ServletBridge looks the methods up by name on the concrete request and response implementation, which the image analysis can not see.",
+    "name": "org.eclipse.jetty.ee10.servlet.ServletApiResponse",
+    "allPublicMethods": true
+  },
+  {
+    "name": "org.eclipse.jetty.ee10.servlet.ServletApiRequest",
+    "allPublicMethods": true
+  },
+  {
+    "_comment": "HikariConfig.copyStateTo() moves the whole configuration by getDeclaredFields(). Without this registration the field list comes back empty, the pool is built from an empty configuration and fails with a bare NullPointerException.",
+    "name": "com.zaxxer.hikari.HikariConfig",
+    "allDeclaredFields": true
+  },
+  {
+    "name": "com.zaxxer.hikari.HikariDataSource",
+    "allDeclaredFields": true
+  },
+  {
+    "_comment": "HikariCP allocates its FastList and ConcurrentBag backing arrays by Array.newInstance().",
+    "name": "java.sql.Statement[]"
+  },
+  {
+    "name": "com.zaxxer.hikari.util.ConcurrentBag$IConcurrentBagEntry[]"
+  }
+]

@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# Runs the Ujorm PetStore on a JVM in the Jetty plugin, with a hot redeploy of the sources.
+# It needs a JDK 25 and nothing else.
+#
+# See run-ujorm-petstore-native.sh to build a single native executable by GraalVM instead.
 
 # Exit immediately if a command exits with a non-zero status
 set -e
