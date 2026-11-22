@@ -336,7 +336,7 @@ public List<Pet> findAll(long fromId) {
 
 * **Java:** 25
 * **DI Framework:** Avaje Inject 10.4
-* **ORM and Web:** Ujorm 3.0.6-SNAPSHOT (`ujo-core`, `ujo-orm`, `ujo-web`)
+* **ORM and Web:** Ujorm 3.0.7 (`ujo-core`, `ujo-orm`, `ujo-web`)
 * **Database:** H2 (In-memory)
 * **Server:** Jetty — the Maven plugin for development, embedded in the native binary / Tomcat compatible
 * **Native build:** GraalVM CE 25 for Linux, executed in Docker
